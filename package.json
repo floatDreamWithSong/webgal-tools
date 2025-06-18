@@ -1,7 +1,19 @@
 {
+	"type": "module",
+	"scripts": {
+		"start": "node --loader ts-node/esm src/main.ts",
+		"dev": "node --loader ts-node/esm --watch src/main.ts",
+		"build": "tsc",
+		"serve": "node dist/main.js",
+		"test": "npx @modelcontextprotocol/inspector node dist/main.js"
+	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.3",
-		"@types/express": "^5.0.3",
-		"express": "^5.1.0"
+		"zod": "^3.25.67"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.6.0"
 	}
 }

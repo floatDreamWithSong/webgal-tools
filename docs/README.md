@@ -37,7 +37,3 @@
 - [动画效果](webgal-script/animation.md)
 
 - [特效](webgal-script/special-effect.md)
-
-## Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/MakinoharaShoko/WebGAL.svg)](https://starchart.cc/MakinoharaShoko/WebGAL)
