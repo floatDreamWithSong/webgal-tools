@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { getServer } from './server.js'
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 

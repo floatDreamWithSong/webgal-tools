@@ -1,11 +1,27 @@
 {
+	"name": "openwebgal-mcp-server",
+	"version": "0.1.0",
+	"description": "A model-context-protocol server for WebGAL documentation, providing tools, prompts and resources.",
 	"type": "module",
+	"main": "dist/main.js",
+	"types": "dist/main.d.ts",
+	"bin": {
+		"webgal-mcp": "dist/main.js"
+	},
 	"scripts": {
 		"start": "node --loader ts-node/esm src/main.ts",
 		"dev": "node --loader ts-node/esm --watch src/main.ts",
 		"build": "tsc",
 		"serve": "node dist/main.js",
-		"test": "npx @modelcontextprotocol/inspector node dist/main.js"
+		"test": "npx @modelcontextprotocol/inspector node dist/main.js",
+		"prepublishOnly": "pnpm run build"
+	},
+	"files": [
+		"dist",
+		"docs"
+	],
+	"publishConfig": {
+		"access": "public"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.3",
