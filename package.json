@@ -1,0 +1,7 @@
+{
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.12.3",
+		"@types/express": "^5.0.3",
+		"express": "^5.1.0"
+	}
+}
