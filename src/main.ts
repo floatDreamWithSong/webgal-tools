@@ -6,8 +6,8 @@ async function main() {
   try {
     const mcpServer = getServer();
     const transport = new StdioServerTransport();
-    
-    // console.error('WebGAL MCP 文档服务器已启动 (stdio模式)');
+    // 使用error输出，避免占用stdio
+    console.error('WebGAL MCP 文档服务器已启动 (stdio模式)');
     
     await mcpServer.connect(transport);
     

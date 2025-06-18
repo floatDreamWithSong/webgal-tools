@@ -10,6 +10,16 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// 使用 import.meta.url 来获取当前文件的URL
+const __filename = fileURLToPath(import.meta.url);
+// __dirname 是当前文件所在的目录 (e.g., /path/to/project/dist)
+const __dirname = path.dirname(__filename);
+// packageRoot 是项目的根目录 (e.g., /path/to/project)
+// 因为编译后的文件在 dist 目录中，所以我们需要向上回退一级
+const packageRoot = path.resolve(__dirname, '..');
+const docsDir = path.join(packageRoot, 'docs');
 
 export const getServer = () => server;
 
@@ -62,7 +72,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
   switch (name) {
     case "get_docs_directory":
       try {
-        const readmePath = path.join(process.cwd(), 'docs', 'README.md');
+        const readmePath = path.join(docsDir, 'README.md');
         const content = await fs.readFile(readmePath, 'utf-8');
         return {
           content: [
@@ -101,9 +111,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         }
 
         // 安全检查：确保路径在 docs 目录内
-        const fullPath = path.join(process.cwd(), 'docs', docPath);
+        const fullPath = path.join(docsDir, docPath);
         const normalizedPath = path.normalize(fullPath);
-        const docsDir = path.join(process.cwd(), 'docs');
         
         if (!normalizedPath.startsWith(docsDir)) {
           return {
@@ -227,7 +236,6 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 // Resource 列表处理器
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
   try {
-    const docsDir = path.join(process.cwd(), 'docs');
     const resources = [];
     
     // 递归获取所有文档文件
@@ -276,9 +284,8 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   
   try {
     const docPath = uri.replace('webgal://docs/', '');
-    const fullPath = path.join(process.cwd(), 'docs', docPath);
+    const fullPath = path.join(docsDir, docPath);
     const normalizedPath = path.normalize(fullPath);
-    const docsDir = path.join(process.cwd(), 'docs');
     
     // 安全检查
     if (!normalizedPath.startsWith(docsDir)) {
