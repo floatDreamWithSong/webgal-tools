@@ -89,6 +89,13 @@ npx openwebgal-mcp-server
 
 当服务器启动后，它会监听标准输入/输出（stdio），等待来自 MCP 客户端的连接和请求。
 
+### 可能的未来计划
+
+- 增强diff edit能力
+- 增强工具调用欲望，降低AI幻觉
+- 基于此MCPServer，创立对应的WebGal Agent以进一步提升WebGal的相关专业能力
+- 能力完善后再尝试接入WebGal Terre
+
 ### 开发指南
 
 如果您想修改此项目，请按照以下步骤操作：
