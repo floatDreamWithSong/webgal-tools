@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { getServer } from './server.js'
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { server } from "./server/index.js";
 
 async function main() {
   try {
-    const mcpServer = getServer();
+    const mcpServer = server;
     const transport = new StdioServerTransport();
     // 使用error输出，避免占用stdio
     console.error('WebGAL MCP 文档服务器已启动 (stdio模式)');
