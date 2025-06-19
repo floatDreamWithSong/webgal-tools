@@ -26,14 +26,14 @@ const getWorkDir = () => {
   if (process.env.WEBGAL_WORK_DIR) {
     return process.env.WEBGAL_WORK_DIR;
   }
-  const _w_index = process.argv.findIndex((v) => v === '-w')
+  const _w_index = process.argv.findIndex((v) => v === '-webgal')
   if (_w_index === -1) {
-    console.error("未设置工作目录：\n1. 暴露环境变量WEBGAL_WORK_DIR=你的game目录\n2. 启动时添加参数 -w <工作目录>")
+    console.error("未设置工作目录：\n1. 暴露环境变量WEBGAL_WORK_DIR=你的game目录\n2. 启动时添加参数 -webgal <工作目录>")
     process.exit(2)
   }
 
   if (_w_index >= process.argv.length || !process.argv[_w_index + 1]) {
-    console.error("-w 参数用法： -w <工作目录>")
+    console.error("-webgal 参数用法： -webgal <工作目录>")
     process.exit(2)
   }
   return process.argv[_w_index + 1];

@@ -1,6 +1,6 @@
 {
 	"name": "openwebgal-mcp-server",
-	"version": "1.0.3",
+	"version": "1.0.10",
 	"description": "A model-context-protocol server for WebGAL documentation, providing tools, prompts and resources.",
 	"type": "module",
 	"main": "dist/main.js",
@@ -13,7 +13,7 @@
 		"dev": "tsc --watch",
 		"build": "tsc",
 		"serve": "node dist/main.js",
-		"test": "pnpm dlx @modelcontextprotocol/inspector node dist/main.js",
+		"test": "pnpm dlx @modelcontextprotocol/inspector node dist/main.js -webgal D:/file/WebGal/release/public/games/新的游戏/game",
 		"prepublishOnly": "pnpm run build"
 	},
 	"files": [

@@ -7,7 +7,7 @@ import {
   // 资产工具
   assetsToolsSchema, scanWorkDirAssets, getLive2DExpression,
   // 场景工具
-  sceneToolsSchema, scanSceneScript, createSceneScript, editSceneScript
+  sceneToolsSchema, scanSceneScript, createSceneScript
 } from "./tools/index.js";
 
 export const registerTools = (server: Server) => {
@@ -49,8 +49,8 @@ export const registerTools = (server: Server) => {
       case "create_scene_script":
         return await createSceneScript(args);
 
-      case "edit_scene_script":
-        return await editSceneScript(args);
+      // case "edit_scene_script":
+      //   return await editSceneScript(args);
 
       default:
         return {

@@ -46,10 +46,10 @@ AI 助手主要有三大核心能力：
 
 ### 工作目录设定
 
-可以使用`-w`参数来强制设定你的game目录，例如
+可以使用`-webgal`参数来强制设定你的game目录，例如
 
 ```bash
-npx openwebgal-mcp-server -w D:\\file\\WebGal\\release\\public\\games\\新的游戏\\game
+npx openwebgal-mcp-server -webgal D:\\file\\WebGal\\release\\public\\games\\新的游戏\\game
 ```
 
 或者你也可以设置环境变量`WEBGAL_WORK_DIR`为你的game目录。
@@ -81,7 +81,7 @@ npx openwebgal-mcp-server init
 
 您可以使用 `npx` 直接运行此服务器，它会自动加载`.env`文件。
 
-> 推荐设置`-w`参数以指定工作目录
+> 推荐设置`-webgal`参数以指定工作目录
 
 ```bash
 npx openwebgal-mcp-server

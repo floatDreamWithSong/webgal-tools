@@ -73,7 +73,7 @@ export async function getLive2DExpression(args: any) {
       };
     }
 
-    const fullModelDir = path.join(workDir, modelDir);
+    const fullModelDir = path.join(workDir,"figure", modelDir);
     const expressions = new Set<string>();
 
     // 在指定目录下递归搜索表情文件

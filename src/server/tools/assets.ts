@@ -6,7 +6,7 @@ import { getLive2DExpression } from './live2d-utils.js';
 export const assetsToolsSchema = [
   {
     name: "scan_work_dir_assets",
-    description: "可以扫描工作目录下的资产结构/路径，支持多目录配置和Live2D资产。角色资产会进行浅层扫描。live2d的路径组成一般是 (前缀目录)/角色/角色服装/json模型",
+    description: "可以扫描工作目录下的资产结构/路径，包括Live2D资产，图片，音频等。角色资产会进行浅层扫描。live2d的路径组成一般是 (前缀目录)/角色/角色服装/json模型",
     inputSchema: {
       type: "object",
       properties: {
@@ -30,7 +30,7 @@ export const assetsToolsSchema = [
       properties: {
         model_dir: {
           type: "string",
-          description: "Live2D角色所在的目录，相对于工作目录的路径。注意是角色目录，不是服装目录或者模型目录"
+          description: "Live2D角色所在的目录，不是服装目录或者模型目录，并且是相对于figure目录的相对路径！"
         }
       },
       required: ["model_dir"]
@@ -98,6 +98,9 @@ function generateScanReport(scanResult: ScanResult): string {
         report += `**${assetType}文件列表**:\n`;
         processedPaths.forEach(file => report += `- ${file}\n`);
       }
+      report += "**警告**：Webgal资源在使用时不能携带资源前缀，例如background资产被使用时: background/asdad/bg.png 是错误的语法，而asdad/bg.png则是正确的。对于其它资产同理"
+    }else{
+      report+="搜索结果为空？是否正确按要求传入了有效的参数？"
     }
     report += `\n`;
   }
