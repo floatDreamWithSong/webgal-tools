@@ -70,14 +70,19 @@ function generateScanReport(scanResult: ScanResult): string {
     if (details.maxDepth) {
       report += `**最大扫描深度**: ${details.maxDepth}层\n`;
     }
+    // 移除assetType前缀
+    const processedPaths = paths.map(path => {
+      // 移除开头的资产类型目录名（如 'background/', 'figure/' 等）
+      const assetTypePrefix = `${assetType}/`;
+      return path.startsWith(assetTypePrefix) ? path.slice(assetTypePrefix.length) : path;
+    });
+    report += `**找到的资产**: ${processedPaths.length} 个\n\n`;
 
-    report += `**找到的资产**: ${paths.length} 个\n\n`;
-
-    if (paths.length > 0) {
+    if (processedPaths.length > 0) {
       if (assetType === 'figure') {
         // 分类显示Live2D文件和角色目录
-        const live2dFiles = paths.filter(p => p.endsWith('.json'));
-        const characterDirs = paths.filter(p => p.endsWith('/'));
+        const live2dFiles = processedPaths.filter(p => p.endsWith('.json'));
+        const characterDirs = processedPaths.filter(p => p.endsWith('/'));
 
         if (live2dFiles.length > 0) {
           report += `**Live2D模型文件** (${live2dFiles.length}个):\n`;
@@ -90,11 +95,8 @@ function generateScanReport(scanResult: ScanResult): string {
           characterDirs.forEach(dir => report += `- ${dir}\n`);
         }
       } else {
-        report += `**文件列表**:\n`;
-        paths.slice(0, 10).forEach(file => report += `- ${file}\n`);
-        if (paths.length > 10) {
-          report += `- ... 还有 ${paths.length - 10} 个文件\n`;
-        }
+        report += `**${assetType}文件列表**:\n`;
+        processedPaths.forEach(file => report += `- ${file}\n`);
       }
     }
     report += `\n`;

@@ -39,9 +39,6 @@ changeFigure: xxx;                                     // 中央位置
 changeFigure: xxx -id=标识符 -position={"x":值,"y":值}; // 自定义位置
 ```
 
-## 常用表情类型
-smile(微笑) serious(严肃) sad(悲伤) angry(愤怒) cry(哭泣) thinking(思考) surprised(惊讶) shame(害羞) kime(坚定) nf(普通) kandou(感动) sigh(叹气) wink(眨眼) bow(鞠躬) bye(再见) idle(待机)
-
 ## 高级功能
 
 ### 选择分支系统
