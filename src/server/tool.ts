@@ -5,7 +5,7 @@ import {
   // 文档工具
   docsToolsSchema, getDocsDirectory, getDocContent,
   // 资产工具
-  assetsToolsSchema, scanWorkDirAssets, getLive2DExpression,
+  assetsToolsSchema, scanWorkDirAssets, getLive2DExpression, getLive2DMotions,
   // 场景工具
   sceneToolsSchema, scanSceneScript, createSceneScript
 } from "./tools/index.js";
@@ -41,6 +41,9 @@ export const registerTools = (server: Server) => {
 
       case "get_live2d_expression":
         return await getLive2DExpression(args);
+
+      case "get_live2d_motions":
+        return await getLive2DMotions(args);
 
       // 场景脚本工具
       case "scan_scene_script":

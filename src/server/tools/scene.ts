@@ -153,7 +153,7 @@ export async function createSceneScript(args: any) {
     }
 
     const sceneDir = path.join(workDir, 'scene');
-    const fullPath = path.join(sceneDir, scriptPath.replace(/^\.\//, ''));
+    const fullPath = path.join(scriptPath.startsWith('scene/')?workDir:sceneDir, scriptPath.replace(/^\.\//, ''));
     
     // 安全检查：确保路径在scene目录内
     const normalizedPath = path.normalize(fullPath);

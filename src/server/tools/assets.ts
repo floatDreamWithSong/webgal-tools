@@ -1,6 +1,6 @@
 import { AssetType, ScanResult } from './asset-types.js';
 import { scanCharacterAssets, scanStandardAssets, getAssetDirectories } from './asset-scanner.js';
-import { getLive2DExpression } from './live2d-utils.js';
+import { getLive2DExpression, getLive2DMotions } from './live2d-utils.js';
 
 // 资产工具的Schema定义
 export const assetsToolsSchema = [
@@ -35,11 +35,25 @@ export const assetsToolsSchema = [
       },
       required: ["model_dir"]
     }
+  },
+  {
+    name: "get_live2d_motions",
+    description: "获取指定Live2D模型目录下的所有动作文件，在调用此工具之前你应该清晰地知晓现有的live2d角色路径。工具会在该目录下搜索所有.mtn动作文件",
+    inputSchema: {
+      type: "object",
+      properties: {
+        model_dir: {
+          type: "string",
+          description: "Live2D角色所在的目录，不是服装目录或者模型目录，并且是相对于figure目录的相对路径！"
+        }
+      },
+      required: ["model_dir"]
+    }
   }
 ];
 
 // 导出Live2D表情获取函数
-export { getLive2DExpression };
+export { getLive2DExpression, getLive2DMotions };
 
 // 生成扫描报告
 function generateScanReport(scanResult: ScanResult): string {
