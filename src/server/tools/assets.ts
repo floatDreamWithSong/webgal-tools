@@ -30,7 +30,7 @@ export const assetsToolsSchema = [
       properties: {
         model_dir: {
           type: "string",
-          description: "Live2D角色所在的目录，不是服装目录或者模型目录，并且是相对于figure目录的相对路径！"
+          description: "Live2D角色所在的目录，**不是服装目录**（例如：mygo/sakiko/casual是错误的，因为带有casual服饰），并且是相对于figure目录的相对路径！"
         }
       },
       required: ["model_dir"]
@@ -44,7 +44,7 @@ export const assetsToolsSchema = [
       properties: {
         model_dir: {
           type: "string",
-          description: "Live2D角色所在的目录，不是服装目录或者模型目录，并且是相对于figure目录的相对路径！"
+          description: "Live2D角色所在的目录，**不是服装目录**（例如：mygo/sakiko/casual是错误的，因为带有casual服饰），并且是相对于figure目录的相对路径！"
         }
       },
       required: ["model_dir"]
