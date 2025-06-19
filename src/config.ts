@@ -1,6 +1,7 @@
-import process from 'process';
+import process, { env } from 'process';
 import path from 'path';
 import { fileURLToPath } from "url";
+import fs from 'fs'
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 以下为mcp-server配置 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -20,5 +21,23 @@ export const docsDir = path.join(packageRoot, 'docs');
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 以下为webgal工作目录配置 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+const envPath = path.join(process.env.WEBGAL_ENV_DIR || process.cwd(), ".env")
+if (fs.existsSync(envPath)) {
+  process.loadEnvFile(envPath)
+  console.error(`load env var from ${envPath}`)
+}
+
 export const workDir = process.env.WEBGAL_WORK_DIR || process.cwd();
 console.error(`用户工作目录${workDir}`)
+
+if (process.argv.includes('init')) {
+  // 将env.example复制到工作目录的.env文件
+  if(fs.existsSync(path.join(workDir, '.env'))){
+    console.error(`已存在${workDir}/.env !`)
+    process.exit(1)
+  }
+  fs.copyFileSync(path.join(packageRoot, 'env.example'),
+    path.join(workDir, '.env'));
+  console.error(`已将env.example复制到${workDir}/.env`)
+  process.exit(0)
+}
