@@ -21,18 +21,37 @@ export const docsDir = path.join(packageRoot, 'docs');
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 以下为webgal工作目录配置 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-const envPath = path.join(process.env.WEBGAL_ENV_DIR || process.cwd(), ".env")
+
+const getWorkDir = () => {
+  if (process.env.WEBGAL_WORK_DIR) {
+    return process.env.WEBGAL_WORK_DIR;
+  }
+  const _w_index = process.argv.findIndex((v) => v === '-w')
+  if (_w_index !== -1) {
+    console.error("未设置工作目录：\n1. 暴露环境变量WEBGAL_WORK_DIR=你的game目录\n2. 启动时添加参数 -w <工作目录>")
+    process.exit(2)
+  }
+
+  if (_w_index >= process.argv.length || !process.argv[_w_index + 1]) {
+    console.error("-w 参数用法： -w <工作目录>")
+    process.exit(2)
+  }
+  return process.argv[_w_index + 1];
+}
+
+export const workDir = getWorkDir()
+
+const envPath = path.join(workDir, ".env")
 if (fs.existsSync(envPath)) {
   process.loadEnvFile(envPath)
   console.error(`load env var from ${envPath}`)
 }
 
-export const workDir = process.env.WEBGAL_WORK_DIR || process.cwd();
 console.error(`用户工作目录${workDir}`)
 
 if (process.argv.includes('init')) {
   // 将env.example复制到工作目录的.env文件
-  if(fs.existsSync(path.join(workDir, '.env'))){
+  if (fs.existsSync(path.join(workDir, '.env'))) {
     console.error(`已存在${workDir}/.env !`)
     process.exit(1)
   }

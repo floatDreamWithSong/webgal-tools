@@ -5,7 +5,7 @@ import { registerTools } from "./tool.js";
 
 export const server = new Server({
   name: "webgal-docs-server",
-  version: "1.0.0"
+  version: "1.0.1"
 }, {
   capabilities: {
     tools: {},
