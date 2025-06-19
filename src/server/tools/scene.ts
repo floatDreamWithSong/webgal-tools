@@ -53,24 +53,24 @@ export const sceneToolsSchema = [
 //       required: ["path"]
 //     }
 //   },
-  {
-    name: "create_scene_script",
-    description: "可以创建scene文件夹下的webgal脚本（txt格式），其中start.txt一般是已经存在了的，无需再次创建",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: {
-          type: "string",
-          description: "脚本的相对路径，例如: ./scene-02.txt"
-        },
-        content: {
-          type: "string",
-          description: "脚本内容"
-        }
-      },
-      required: ["path", "content"]
-    }
-  }
+  // {
+  //   name: "create_scene_script",
+  //   description: "可以创建scene文件夹下的webgal脚本（txt格式），其中start.txt一般是已经存在了的，无需再次创建",
+  //   inputSchema: {
+  //     type: "object",
+  //     properties: {
+  //       path: {
+  //         type: "string",
+  //         description: "脚本的相对路径，例如: ./scene-02.txt"
+  //       },
+  //       content: {
+  //         type: "string",
+  //         description: "脚本内容"
+  //       }
+  //     },
+  //     required: ["path", "content"]
+  //   }
+  // }
 ];
 
 // 扫描场景脚本
@@ -212,163 +212,163 @@ export async function createSceneScript(args: any) {
   }
 }
 
-// // 编辑场景脚本
-// export async function editSceneScript(args: any) {
-//   try {
-//     const scriptPath = args?.path as string;
-//     const actions = args?.actions as Array<{start: number, end?: number, text: string}>;
+// 编辑场景脚本
+export async function editSceneScript(args: any) {
+  try {
+    const scriptPath = args?.path as string;
+    const actions = args?.actions as Array<{start: number, end?: number, text: string}>;
     
-//     if (!scriptPath) {
-//       return {
-//         content: [
-//           {
-//             type: "text",
-//             text: "错误：请提供脚本路径参数"
-//           }
-//         ],
-//         isError: true
-//       };
-//     }
+    if (!scriptPath) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "错误：请提供脚本路径参数"
+          }
+        ],
+        isError: true
+      };
+    }
 
-//     const sceneDir = path.join(workDir, 'scene');
-//     const fullPath = path.join(sceneDir, scriptPath.replace(/^\.\//, ''));
+    const sceneDir = path.join(workDir, 'scene');
+    const fullPath = path.join(sceneDir, scriptPath.replace(/^\.\//, ''));
     
-//     // 安全检查：确保路径在scene目录内
-//     const normalizedPath = path.normalize(fullPath);
-//     if (!normalizedPath.startsWith(sceneDir)) {
-//       return {
-//         content: [
-//           {
-//             type: "text",
-//             text: "错误：路径不在允许的scene目录范围内"
-//           }
-//         ],
-//         isError: true
-//       };
-//     }
+    // 安全检查：确保路径在scene目录内
+    const normalizedPath = path.normalize(fullPath);
+    if (!normalizedPath.startsWith(sceneDir)) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "错误：路径不在允许的scene目录范围内"
+          }
+        ],
+        isError: true
+      };
+    }
 
-//     // 读取原文件内容
-//     let originalContent: string;
-//     try {
-//       originalContent = await fs.readFile(normalizedPath, 'utf-8');
-//     } catch (error) {
-//       return {
-//         content: [
-//           {
-//             type: "text",
-//             text: `错误：无法读取文件 ${scriptPath} - 文件可能不存在`
-//           }
-//         ],
-//         isError: true
-//       };
-//     }
+    // 读取原文件内容
+    let originalContent: string;
+    try {
+      originalContent = await fs.readFile(normalizedPath, 'utf-8');
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `错误：无法读取文件 ${scriptPath} - 文件可能不存在`
+          }
+        ],
+        isError: true
+      };
+    }
 
-//     let lines = originalContent.split('\n');
+    let lines = originalContent.split('\n');
     
-//     // 如果没有提供actions，返回当前文件内容
-//     if (!actions || !Array.isArray(actions) || actions.length === 0) {
-//       return {
-//         content: [
-//           {
-//             type: "text",
-//             text: `# 当前文件内容: ${scriptPath}\n\n\`\`\`\n${originalContent}\n\`\`\``
-//           }
-//         ]
-//       };
-//     }
+    // 如果没有提供actions，返回当前文件内容
+    if (!actions || !Array.isArray(actions) || actions.length === 0) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `# 当前文件内容: ${scriptPath}\n\n\`\`\`\n${originalContent}\n\`\`\``
+          }
+        ]
+      };
+    }
 
-//     // 按start行号倒序排序，这样可以从后往前修改，避免行号变化的问题
-//     const sortedActions = [...actions].sort((a, b) => b.start - a.start);
+    // 按start行号倒序排序，这样可以从后往前修改，避免行号变化的问题
+    const sortedActions = [...actions].sort((a, b) => b.start - a.start);
 
-//     for (const action of sortedActions) {
-//       const { start, end, text } = action;
+    for (const action of sortedActions) {
+      const { start, end, text } = action;
       
-//       // 验证行号（转换为0-based）
-//       const startIdx = start - 1;
-//       const endIdx = end ? end - 1 : startIdx;
+      // 验证行号（转换为0-based）
+      const startIdx = start - 1;
+      const endIdx = end ? end - 1 : startIdx;
       
-//       if (startIdx < 0) {
-//         return {
-//           content: [
-//             {
-//               type: "text",
-//               text: `错误：起始行号 ${start} 无效，行号应该从1开始`
-//             }
-//           ],
-//           isError: true
-//         };
-//       }
+      if (startIdx < 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `错误：起始行号 ${start} 无效，行号应该从1开始`
+            }
+          ],
+          isError: true
+        };
+      }
 
-//       if (end && end !== -1) {
-//         // 替换或删除操作
-//         if (endIdx < startIdx) {
-//           return {
-//             content: [
-//               {
-//                 type: "text",
-//                 text: `错误：结束行号 ${end} 不能小于起始行号 ${start}`
-//               }
-//             ],
-//             isError: true
-//           };
-//         }
+      if (end && end !== -1) {
+        // 替换或删除操作
+        if (endIdx < startIdx) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `错误：结束行号 ${end} 不能小于起始行号 ${start}`
+              }
+            ],
+            isError: true
+          };
+        }
         
-//         if (endIdx >= lines.length) {
-//           return {
-//             content: [
-//               {
-//                 type: "text",
-//                 text: `错误：结束行号 ${end} 超出文件范围（文件共 ${lines.length} 行）`
-//               }
-//             ],
-//             isError: true
-//           };
-//         }
+        if (endIdx >= lines.length) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `错误：结束行号 ${end} 超出文件范围（文件共 ${lines.length} 行）`
+              }
+            ],
+            isError: true
+          };
+        }
 
-//         // 替换指定范围的行
-//         const newLines = text?.split('\n') || [];
-//         lines.splice(startIdx, endIdx - startIdx + 1, ...newLines);
-//       } else {
-//         // 插入操作
-//         if (startIdx > lines.length) {
-//           return {
-//             content: [
-//               {
-//                 type: "text",
-//                 text: `错误：插入位置 ${start} 超出文件范围（文件共 ${lines.length} 行）`
-//               }
-//             ],
-//             isError: true
-//           };
-//         }
+        // 替换指定范围的行
+        const newLines = text?.split('\n') || [];
+        lines.splice(startIdx, endIdx - startIdx + 1, ...newLines);
+      } else {
+        // 插入操作
+        if (startIdx > lines.length) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `错误：插入位置 ${start} 超出文件范围（文件共 ${lines.length} 行）`
+              }
+            ],
+            isError: true
+          };
+        }
         
-//         // 在指定行之前插入新内容
-//         const newLines = text.split('\n');
-//         lines.splice(startIdx, 0, ...newLines);
-//       }
-//     }
+        // 在指定行之前插入新内容
+        const newLines = text.split('\n');
+        lines.splice(startIdx, 0, ...newLines);
+      }
+    }
 
-//     const newContent = lines.join('\n');
-//     await fs.writeFile(normalizedPath, newContent, 'utf-8');
+    const newContent = lines.join('\n');
+    await fs.writeFile(normalizedPath, newContent, 'utf-8');
     
-//     return {
-//       content: [
-//         {
-//           type: "text",
-//           text: `成功修改脚本文件: ${scriptPath}\n\n执行了 ${actions.length} 个修改操作`
-//         }
-//       ]
-//     };
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : String(error);
-//     return {
-//       content: [
-//         {
-//           type: "text",
-//           text: `错误：修改脚本文件失败 - ${errorMessage}`
-//         }
-//       ],
-//       isError: true
-//     };
-//   }
-// }
+    return {
+      content: [
+        {
+          type: "text",
+          text: `成功修改脚本文件: ${scriptPath}\n\n执行了 ${actions.length} 个修改操作`
+        }
+      ]
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: "text",
+          text: `错误：修改脚本文件失败 - ${errorMessage}`
+        }
+      ],
+      isError: true
+    };
+  }
+}
