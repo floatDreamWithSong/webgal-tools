@@ -26,6 +26,7 @@
 		"access": "public"
 	},
 	"dependencies": {
+		"@mastra/core": "^0.10.6",
 		"@modelcontextprotocol/sdk": "^1.12.3",
 		"eventsource": "^4.0.0",
 		"node-fetch": "^3.3.2",

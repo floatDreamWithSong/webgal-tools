@@ -7,7 +7,8 @@ import {
   // 资产工具
   assetsToolsSchema, scanWorkDirAssets, getLive2DExpression, getLive2DMotions,
   // 场景工具
-  sceneToolsSchema, scanSceneScript
+  sceneToolsSchema, scanSceneScript, readSceneScript,
+  writeSceneScript
 } from "./tools/index.js";
 
 export const registerTools = (server: Server) => {
@@ -27,44 +28,56 @@ export const registerTools = (server: Server) => {
   server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
     const { name, arguments: args } = request.params;
 
-    switch (name) {
-      // 文档工具
-      case "get_docs_directory":
-        return await getDocsDirectory();
+    try {
+      switch (name) {
+        // 文档工具
+        case "get_docs_directory":
+          return await getDocsDirectory();
 
-      case "get_doc_content":
-        return await getDocContent(args);
+        case "get_doc_content":
+          return await getDocContent(args);
 
-      // 资产工具
-      case "scan_work_dir_assets":
-        return await scanWorkDirAssets(args);
+        // 资产工具
+        case "scan_work_dir_assets":
+          return await scanWorkDirAssets(args);
 
-      case "get_live2d_expression":
-        return await getLive2DExpression(args);
+        case "get_live2d_expression":
+          return await getLive2DExpression(args);
 
-      case "get_live2d_motions":
-        return await getLive2DMotions(args);
+        case "get_live2d_motions":
+          return await getLive2DMotions(args);
 
-      // 场景脚本工具
-      case "scan_scene_script":
-        return await scanSceneScript();
+        // 场景脚本工具
+        case "scan_scene_script":
+          return await scanSceneScript();
 
-      // case "create_scene_script":
-      //   return await createSceneScript(args);
+        case "read_scene_script":
+          return await readSceneScript(args);
 
-      // case "edit_scene_script":
-      //   return await editSceneScript(args);
+        case "write_scene_script":
+          return await writeSceneScript(args);
 
-      default:
-        return {
-          content: [
-            {
-              type: "text",
-              text: `错误：未知的工具名称 "${name}"`
-            }
-          ],
-          isError: true
-        };
+        default:
+          return {
+            content: [
+              {
+                type: "text",
+                text: `错误：未知的工具名称 "${name}"`
+              }
+            ],
+            isError: true
+          };
+      }
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `工具执行错误: ${error instanceof Error ? error.message : String(error)}`
+          }
+        ],
+        isError: true
+      };
     }
   });
 
