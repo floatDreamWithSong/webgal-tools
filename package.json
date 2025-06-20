@@ -9,7 +9,7 @@
 		"webgal-mcp": "dist/main.js"
 	},
 	"scripts": {
-		"start": "node --loader ts-node/esm src/main.ts",
+		"start": "node --loader ts-node/esm src/voice/request.ts",
 		"dev": "tsc --watch",
 		"build": "tsc",
 		"serve": "node dist/main.js",
@@ -27,6 +27,9 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.12.3",
+		"eventsource": "^4.0.0",
+		"node-fetch": "^3.3.2",
+		"uuid": "^11.1.0",
 		"zod": "^3.25.67"
 	},
 	"devDependencies": {
