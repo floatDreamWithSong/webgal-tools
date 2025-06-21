@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'crypto';
 import { DialogueChunk, WebGALScriptCompiler } from './compiler.js';
 import { ScriptCache } from './cache.js';
 import { translate, batchTranslate, checkTranslatorService, setCharacterStyle } from '../translate/index.js';
@@ -19,6 +20,7 @@ export interface VoiceTask {
   audioFileName: string;
   refAudioPath?: string;
   refText?: string;
+  contentHash?: string; // 添加内容哈希字段
 }
 
 interface DeleteTask {
@@ -69,13 +71,42 @@ export class VoiceGenerator {
   }
 
   /**
-   * 生成音频文件名
+   * 生成基于内容的音频文件名
    * @param character 角色名
+   * @param text 对话内容
    * @returns 音频文件名
    */
-  private generateAudioFileName(character: string): string {
-    const uuid = uuidv4().substring(0, 8);
-    return `${character}_${uuid}.wav`;
+  private generateAudioFileName(character: string, text: string): string {
+    // 使用角色名和对话内容生成哈希
+    const contentHash = createHash('md5')
+      .update(`${character}:${text}`)
+      .digest('hex')
+      .substring(0, 12); // 取前12位作为文件名
+    
+    return `${character}_${contentHash}.wav`;
+  }
+
+  /**
+   * 检查音频文件是否已存在
+   * @param audioFileName 音频文件名
+   * @returns 文件是否存在
+   */
+  private audioFileExists(audioFileName: string): boolean {
+    const audioPath = path.join(this.audioOutputDir, audioFileName);
+    return fs.existsSync(audioPath);
+  }
+
+  /**
+   * 生成内容哈希
+   * @param character 角色名
+   * @param text 对话内容
+   * @returns 内容哈希
+   */
+  private generateContentHash(character: string, text: string): string {
+    return createHash('md5')
+      .update(`${character}:${text}`)
+      .digest('hex')
+      .substring(0, 12);
   }
 
   /**
@@ -97,38 +128,68 @@ export class VoiceGenerator {
   }
 
   /**
-   * 处理删除任务
+   * 处理删除任务（优化版本）
    * @param deletedDialogues 已删除的对话
    */
   private processDeletionTasks(deletedDialogues: DialogueChunk[]): void {
     console.error(`处理删除任务，共 ${deletedDialogues.length} 个`);
     
     for (const dialogue of deletedDialogues) {
+      // 优先使用已有的audioFile字段
       if (dialogue.audioFile) {
         this.deleteAudioFile(dialogue.audioFile);
+      } else {
+        // 如果没有audioFile字段，根据内容哈希生成文件名并尝试删除
+        const audioFileName = this.generateAudioFileName(dialogue.character, dialogue.text);
+        if (this.audioFileExists(audioFileName)) {
+          this.deleteAudioFile(audioFileName);
+        }
       }
     }
   }
 
   /**
-   * 创建语音生成任务
+   * 创建语音生成任务（优化版本）
    * @param addedDialogues 新增的对话
-   * @returns 语音任务数组
+   * @returns 去重后的语音任务数组
    */
   private createVoiceTasks(addedDialogues: DialogueChunk[]): VoiceTask[] {
     const tasks: VoiceTask[] = [];
+    const uniqueTasks = new Map<string, VoiceTask>(); // 用于去重的映射
+    
+    console.error(`📋 创建语音任务，共 ${addedDialogues.length} 个对话`);
 
     for (const dialogue of addedDialogues) {
-      const audioFileName = this.generateAudioFileName(dialogue.character);
+      const contentHash = this.generateContentHash(dialogue.character, dialogue.text);
+      const audioFileName = this.generateAudioFileName(dialogue.character, dialogue.text);
       
-      tasks.push({
-        character: dialogue.character,
-        originalText: dialogue.text,
-        targetText: dialogue.text, // 如果需要翻译，后面会更新
-        audioFileName,
-      });
+      // 检查音频文件是否已存在
+      if (this.audioFileExists(audioFileName)) {
+        console.error(`✅ 音频文件已存在，跳过任务: ${audioFileName}`);
+        continue;
+      }
+      
+      // 使用内容哈希作为去重key
+      const taskKey = contentHash;
+      
+      if (!uniqueTasks.has(taskKey)) {
+        const task: VoiceTask = {
+          character: dialogue.character,
+          originalText: dialogue.text,
+          targetText: dialogue.text, // 如果需要翻译，后面会更新
+          audioFileName,
+          contentHash
+        };
+        
+        uniqueTasks.set(taskKey, task);
+        tasks.push(task);
+        console.error(`📝 创建任务: ${dialogue.character} - ${dialogue.text.substring(0, 20)}...`);
+      } else {
+        console.error(`🔄 发现重复任务，已合并: ${dialogue.character} - ${dialogue.text.substring(0, 20)}...`);
+      }
     }
 
+    console.error(`🎯 任务创建完成：原始 ${addedDialogues.length} 个对话，去重后 ${tasks.length} 个任务`);
     return tasks;
   }
 
@@ -172,6 +233,7 @@ export class VoiceGenerator {
         const isServiceAvailable = await aiService.checkAvailability(translateConfig);
         if (!isServiceAvailable) {
           console.error(`${translateConfig.model_type} 服务不可用，将跳过翻译步骤`);
+          return [];
         }
       } else {
         // 兼容旧的Ollama检查方式
@@ -179,6 +241,7 @@ export class VoiceGenerator {
         const isOllamaAvailable = await checkTranslatorService(endpoint);
         if (!isOllamaAvailable) {
           console.error('Ollama服务不可用，将跳过翻译步骤');
+          return [];
         }
       }
     }
@@ -238,7 +301,7 @@ export class VoiceGenerator {
   }
 
   /**
-   * 更新脚本文件
+   * 更新脚本文件（优化版本）
    * @param filePath 脚本文件路径
    * @param addedDialogues 新增的对话
    * @param successfulTasks 成功的语音任务
@@ -248,17 +311,18 @@ export class VoiceGenerator {
     addedDialogues: DialogueChunk[], 
     successfulTasks: VoiceTask[]
   ): void {
-    // 创建任务映射，用于快速查找音频文件名
+    // 创建任务映射，使用内容哈希作为key
     const taskMap = new Map<string, VoiceTask>();
     for (const task of successfulTasks) {
-      const key = `${task.character}:${task.originalText}`;
-      taskMap.set(key, task);
+      if (task.contentHash) {
+        taskMap.set(task.contentHash, task);
+      }
     }
 
     // 更新对话数据
     const updatedDialogues = addedDialogues.map(dialogue => {
-      const key = `${dialogue.character}:${dialogue.text}`;
-      const task = taskMap.get(key);
+      const contentHash = this.generateContentHash(dialogue.character, dialogue.text);
+      const task = taskMap.get(contentHash);
       
       if (task) {
         return {
@@ -266,6 +330,17 @@ export class VoiceGenerator {
           audioFile: task.audioFileName,
           volume: this.configManager.getDefaultVolume().toString()
         };
+      } else {
+        // 如果没有找到对应的任务，检查音频文件是否已存在
+        const audioFileName = this.generateAudioFileName(dialogue.character, dialogue.text);
+        if (this.audioFileExists(audioFileName)) {
+          console.error(`🔗 使用已存在的音频文件: ${audioFileName}`);
+          return {
+            ...dialogue,
+            audioFile: audioFileName,
+            volume: this.configManager.getDefaultVolume().toString()
+          };
+        }
       }
       
       return dialogue;

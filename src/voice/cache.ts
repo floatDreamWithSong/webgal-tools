@@ -56,6 +56,26 @@ export class ScriptCache {
   }
 
   /**
+   * 为对话数组添加唯一id
+   * @param dialogues 对话数组
+   * @returns 带id的对话数组
+   */
+  private addDialogueIds(dialogues: DialogueChunk[]): DialogueChunk[] {
+    const characterCounters = new Map<string, number>();
+    
+    return dialogues.map(dialogue => {
+      const key = `${dialogue.character}:${dialogue.text}`;
+      const count = characterCounters.get(key) || 0;
+      characterCounters.set(key, count + 1);
+      
+      return {
+        ...dialogue,
+        id: count // 添加自增id来区分重复对话
+      };
+    });
+  }
+
+  /**
    * 保存文件缓存
    * @param filePath 文件路径
    * @param content 文件内容
@@ -64,12 +84,14 @@ export class ScriptCache {
   saveFileCache(filePath: string, content: string, configuredCharacters: string[]): void {
     try {
       const dialogues = WebGALScriptCompiler.parseScript(filePath, configuredCharacters);
+      const dialoguesWithIds = this.addDialogueIds(dialogues);
+      
       const cacheData: CacheData = {
         filePath,
         content,
         timestamp: Date.now(),
         hash: this.getContentHash(content),
-        dialogues
+        dialogues: dialoguesWithIds
       };
 
       const cacheFilePath = this.getCacheFilePath(filePath);
@@ -114,23 +136,24 @@ export class ScriptCache {
   } {
     const previousContent = this.readPreviousFileCache(filePath);
     const currentDialogues = WebGALScriptCompiler.parseScript(filePath, configuredCharacters);
+    const currentDialoguesWithIds = this.addDialogueIds(currentDialogues);
     const previousDialogues = this.getCachedDialogues(filePath);
 
     // 文本级别的差异
     const textDifferences = diff.diffLines(previousContent, currentContent);
     
-    // 对话级别的差异
+    // 对话级别的差异 - 使用角色名+对话内容+id作为key
     const previousDialogueMap = new Map<string, DialogueChunk>();
     const currentDialogueMap = new Map<string, DialogueChunk>();
 
-    // 构建对话映射 (使用角色名+对话内容作为key)
+    // 构建对话映射 (使用角色名+对话内容+id作为key来区分重复对话)
     for (const dialogue of previousDialogues) {
-      const key = `${dialogue.character}:${dialogue.text}`;
+      const key = `${dialogue.character}:${dialogue.text}:${dialogue.id || 0}`;
       previousDialogueMap.set(key, dialogue);
     }
 
-    for (const dialogue of currentDialogues) {
-      const key = `${dialogue.character}:${dialogue.text}`;
+    for (const dialogue of currentDialoguesWithIds) {
+      const key = `${dialogue.character}:${dialogue.text}:${dialogue.id || 0}`;
       currentDialogueMap.set(key, dialogue);
     }
 

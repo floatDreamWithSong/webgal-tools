@@ -72,7 +72,7 @@ if (process.argv.includes('init')) {
         "translate": {
           "model_type": "ollama",
           "base_url": "http://localhost:11434/api",
-          "model_name": "gemma:4b",
+          "model_name": "gemma3:4b",
           "enabled": true,
           "context_size": 2,
           "additional_prompt":"人名信息：睦，即：むつみ。"

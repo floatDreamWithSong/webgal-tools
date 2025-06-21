@@ -8,6 +8,7 @@ export interface DialogueChunk {
   volume?: string;
   lineNumber: number;
   originalLine: string;
+  id?: number; // 添加可选的id字段来区分重复对话
 }
 
 export class WebGALScriptCompiler {
