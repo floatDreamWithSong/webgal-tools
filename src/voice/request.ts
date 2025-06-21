@@ -2,7 +2,6 @@ import fetch from 'node-fetch';
 import { EventSource } from 'eventsource';
 import fs from 'fs';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 
 // 语言选项映射（基于原代码中的 dict_language）
 const LANGUAGE_OPTIONS = {
@@ -215,7 +214,7 @@ class GPTSoVITSAPI {
       const timeout = setTimeout(() => {
         eventSource.close();
         reject(new Error('Timeout waiting for completion'));
-      }, 120000); // 2分钟超时
+      }, 15000); // 15秒超时
 
       eventSource.onmessage = (event) => {
         try {
@@ -391,8 +390,8 @@ class GPTSoVITSAPI {
 
       // 设置默认配置（根据原表单的默认值）
       const defaultConfig: VoiceGenerationConfig = {
-        prompt_language: '中文',
-        text_language: '中文',
+        prompt_language: '日文',
+        text_language: '日文',
         how_to_cut: '凑四句一切',
         top_k: 15,
         top_p: 1,
@@ -524,8 +523,8 @@ export async function set_gpt_model(modelName: string): Promise<boolean> {
  */
 export async function set_sovits_model(
   modelName: string, 
-  promptLanguage: keyof typeof LANGUAGE_OPTIONS = '中文',
-  textLanguage: keyof typeof LANGUAGE_OPTIONS = '中文'
+  promptLanguage: keyof typeof LANGUAGE_OPTIONS = '日文',
+  textLanguage: keyof typeof LANGUAGE_OPTIONS = '日文'
 ): Promise<boolean> {
   return await getAPIInstance().setSovitsModel(modelName, promptLanguage, textLanguage);
 }
@@ -549,49 +548,3 @@ export {
   LANGUAGE_OPTIONS, 
   TEXT_CUT_OPTIONS 
 };
-
-async function example() {
-  try {
-    // 获取可用选项
-    console.log('Available languages:', GPTSoVITSAPI.getLanguageOptions());
-    console.log('Available cut methods:', GPTSoVITSAPI.getTextCutOptions());
-    
-    // 设置模型
-    const gptSuccess = await set_gpt_model('GPT_weights_v2ProPlus/Mujica_豊川祥子_白_v2pp.ckpt');
-    const sovitsSuccess = await set_sovits_model(
-      'SoVITS_weights_v2ProPlus/Mujica_豊川祥子_白_v2pp.pth',
-      '日文',
-      '日文'
-    );
-    
-    if (gptSuccess && sovitsSuccess) {
-      // 生成语音（带完整配置验证）
-      const outputPath = await generate_voice(
-        'D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/丰川祥子（白祥）/(A)あなたと空を見上げるのは、いつも夏でしたわね.wav',
-        'あなたと空を見上げるのは、いつも夏でしたわね',
-        '今後は、発言にプロとしての、自覚をお持ちになって',
-        {
-          prompt_language: '日文',
-          text_language: '日文',
-          how_to_cut: '凑四句一切',
-          top_k: 15,
-          top_p: 1.0,
-          temperature: 1.0,
-          speed: 1.0,
-          sample_steps: 8,
-          if_sr: false,
-          pause_second: 0.3
-        }
-      );
-      
-      console.log('Generated audio path:', outputPath);
-      
-      // 下载到本地
-      const api = getAPIInstance();
-      await api.downloadAudio(outputPath, './output_voice.wav');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-example()

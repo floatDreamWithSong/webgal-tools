@@ -1,9 +1,32 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { server } from "./server/index.js";
+import { voiceConfig } from "./config.js";
+import { VoiceGenerator } from "./voice/generator.js";
 
 async function main() {
   try {
+    // 检查是否是语音模式
+    if (voiceConfig) {
+      console.error('启动语音生成模式...');
+      console.error(`输入脚本: ${voiceConfig.inputScript}`);
+      if (voiceConfig.forceMode) {
+        console.error('⚡ 强制模式已启用');
+      }
+
+      const generator = new VoiceGenerator();
+      
+      try {
+        await generator.generateVoice(voiceConfig.inputScript, voiceConfig.forceMode);
+        console.error('语音生成完成！');
+        process.exit(0);
+      } catch (error) {
+        console.error('语音生成失败:', error);
+        process.exit(1);
+      }
+    }
+
+    // 默认MCP服务器模式
     const mcpServer = server;
     const transport = new StdioServerTransport();
     // 使用error输出，避免占用stdio
