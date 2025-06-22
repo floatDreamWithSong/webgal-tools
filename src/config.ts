@@ -133,8 +133,3 @@ export const getVoiceConfig = () => {
 }
 
 export const voiceConfig = getVoiceConfig()
-
-// =============== 翻译配置 ===============
-
-export const TranslateTo = process.env.TRANSLATE
-export const ollamaEndpoint = process.env.OLLAMA_ENDPOINT || 'http://localhost:11434'
