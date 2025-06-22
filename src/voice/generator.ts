@@ -1,11 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
 import { DialogueChunk, WebGALScriptCompiler } from './compiler.js';
 import { ScriptCache } from './cache.js';
-import { translate, batchTranslate, checkTranslatorService, setCharacterStyle } from '../translate/index.js';
-import { GPTSoVITSAPI, VoiceGenerationConfig } from './request.js';
+import { checkTranslatorService, setCharacterStyle } from '../translate/index.js';
+import { GPTSoVITSAPI } from './request.js';
 import { workDir } from '../config.js';
 import { VoiceConfigManager, CharacterVoiceConfig } from './config.js';
 import { BackupManager } from './backup.js';
