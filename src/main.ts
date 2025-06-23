@@ -5,6 +5,7 @@ import { packageRoot, voiceConfig, workDir } from "./config.js";
 import { VoiceGenerator } from "./voice/generator.js";
 import fs from 'fs'
 import path from "path";
+import { logger } from "./logger.js";
 
 async function main() {
   // 功能1：初始化游戏项目
@@ -31,18 +32,18 @@ async function main() {
   }
   // 语音合成接入
   if (voiceConfig) {
-    console.error('启动语音生成模式...');
-    console.error(`输入脚本: ${voiceConfig.inputScript}`);
+    logger.info('启动语音生成模式...');
+    logger.info(`输入脚本: ${voiceConfig.inputScript}`);
     if (voiceConfig.forceMode) {
-      console.error('⚡ 强制模式已启用');
+      logger.info('⚡ 强制模式已启用');
     }
     const generator = new VoiceGenerator();
     try {
       await generator.generateVoice(voiceConfig.inputScript, voiceConfig.forceMode);
-      console.error('语音生成完成！');
+      logger.info('语音生成完成！');
       process.exit(0);
     } catch (error) {
-      console.error('语音生成失败:', error);
+      logger.error('语音生成失败:', error);
       process.exit(1);
     }
   }

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { logger } from '../logger.js';
 
 export class BackupManager {
   private backupDir: string;
@@ -15,7 +16,7 @@ export class BackupManager {
   private ensureBackupDir(): void {
     if (!fs.existsSync(this.backupDir)) {
       fs.mkdirSync(this.backupDir, { recursive: true });
-      console.error(`✅ 创建备份目录: ${this.backupDir}`);
+      logger.info(`✅ 创建备份目录: ${this.backupDir}`);
     }
   }
 
@@ -36,7 +37,7 @@ export class BackupManager {
 
     try {
       fs.copyFileSync(filePath, backupPath);
-      console.error(`📁 创建备份文件: ${backupFileName}`);
+      logger.info(`📁 创建备份文件: ${backupFileName}`);
       return backupPath;
     } catch (error) {
       throw new Error(`创建备份失败: ${error instanceof Error ? error.message : error}`);
@@ -63,11 +64,11 @@ export class BackupManager {
         const filesToDelete = backupFiles.slice(keepCount);
         for (const file of filesToDelete) {
           fs.unlinkSync(file.path);
-          console.error(`🗑️ 清理旧备份: ${file.name}`);
+          logger.info(`🗑️ 清理旧备份: ${file.name}`);
         }
       }
     } catch (error) {
-      console.error('清理备份文件时出错:', error);
+      logger.error('清理备份文件时出错:', error);
     }
   }
 
@@ -98,7 +99,7 @@ export class BackupManager {
         })
         .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
     } catch (error) {
-      console.error('列出备份文件时出错:', error);
+      logger.info('列出备份文件时出错:', error);
       return [];
     }
   }

@@ -1,4 +1,6 @@
 import fetch from 'node-fetch';
+import { TranslateConfig } from '../voice/config.js';
+import { logger } from '../logger.js';
 
 interface OllamaResponse {
   model: string;
@@ -69,8 +71,6 @@ ${context}
   return prompt;
 }
 
-import { TranslateConfig } from '../voice/config.js';
-
 /**
  * 调用Ollama API进行翻译
  * @param character 角色名
@@ -130,55 +130,18 @@ export async function translate(character: string, speech: string, targetLanguag
 
     const hasAdditionalInfo = context || config.additional_prompt;
     if (hasAdditionalInfo) {
-      console.error(`[翻译+增强] ${character}: "${speech}" -> "${translatedText}"`);
+      logger.info(`[翻译+增强] ${character}: "${speech}" -> "${translatedText}"`);
     } else {
-      console.error(`[翻译] ${character}: "${speech}" -> "${translatedText}"`);
+      console.info(`[翻译] ${character}: "${speech}" -> "${translatedText}"`);
     }
     
     return translatedText;
   } catch (error) {
-    console.error(`Translation failed for character ${character}:`, error);
+    logger.error(`Translation failed for character ${character}:`, error);
     // 如果翻译失败，返回原文
-    console.error(`Falling back to original text: "${speech}"`);
+    logger.error(`Falling back to original text: "${speech}"`);
     return speech;
   }
-}
-
-/**
- * 批量翻译对话
- * @param dialogues 对话数组，格式为 [[角色名, 对话内容, 音频文件名, 目标语言], ...]
- * @param config 翻译配置
- * @returns 翻译后的对话数组
- */
-export async function batchTranslate(dialogues: [string, string, string, string][], config: TranslateConfig): Promise<[string, string, string][]> {
-  const results: [string, string, string][] = [];
-  
-  // 按角色分组以提高效率
-  const groupedByCharacter = new Map<string, Array<{ index: number, dialogue: [string, string, string, string] }>>();
-  
-  dialogues.forEach((dialogue, index) => {
-    const character = dialogue[0];
-    if (!groupedByCharacter.has(character)) {
-      groupedByCharacter.set(character, []);
-    }
-    groupedByCharacter.get(character)!.push({ index, dialogue });
-  });
-
-  // 为每个角色依次处理翻译
-  for (const [character, items] of groupedByCharacter) {
-    console.error(`开始翻译角色 ${character} 的对话，共 ${items.length} 条...`);
-    
-    for (const item of items) {
-      const [charName, speech, audioFile, targetLanguage] = item.dialogue;
-      const translatedSpeech = await translate(charName, speech, targetLanguage, config);
-      results[item.index] = [charName, translatedSpeech, audioFile];
-      
-      // 添加小延迟避免API请求过快
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
-
-  return results;
 }
 
 /**

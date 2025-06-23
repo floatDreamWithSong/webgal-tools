@@ -1,5 +1,4 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-// import { registerResources } from "./resource.js";
 import { registerPrompts } from "./prompt.js";
 import { registerTools } from "./tool.js";
 
@@ -14,6 +13,5 @@ export const server = new Server({
   }
 });
 
-// registerResources(server);
 registerPrompts(server);
 registerTools(server);

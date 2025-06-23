@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import { EventSource } from 'eventsource';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '../logger.js';
 
 // 语言选项映射（基于原代码中的 dict_language）
 const LANGUAGE_OPTIONS = {
@@ -330,7 +331,7 @@ class GPTSoVITSAPI {
       console.log(`Successfully loaded GPT model: ${modelName}`);
       return true;
     } catch (error) {
-      console.error(`Failed to set GPT model: ${error}`);
+      logger.error(`Failed to set GPT model: ${error}`);
       return false;
     }
   }
@@ -362,7 +363,7 @@ class GPTSoVITSAPI {
       console.log(`Successfully loaded SoVITS model: ${modelName}`);
       return true;
     } catch (error) {
-      console.error(`Failed to set SoVITS model: ${error}`);
+      logger.error(`Failed to set SoVITS model: ${error}`);
       return false;
     }
   }
@@ -451,7 +452,7 @@ class GPTSoVITSAPI {
         throw new Error('No audio data returned from generation');
       }
     } catch (error) {
-      console.error(`Voice generation failed: ${error}`);
+      logger.error(`Voice generation failed: ${error}`);
       throw error;
     }
   }
