@@ -258,8 +258,6 @@ export class VoiceGenerator {
     }
   }
 
-
-
   /**
    * 主要的语音生成函数（优化版本 - 基于文件缓存）
    * @param fileName 脚本文件名（相对于工作目录/scene）
@@ -272,9 +270,9 @@ export class VoiceGenerator {
       throw new Error(`脚本文件不存在: ${filePath}`);
     }
 
-    console.error(`开始处理脚本文件: ${filePath}`);
+    logger.info(`开始处理脚本文件: ${filePath}`);
     if (forceMode) {
-      console.error(`⚡ 强制模式：清理现有音频文件并重新生成所有语音`);
+      logger.info(`⚡ 强制模式：清理现有音频文件并重新生成所有语音`);
     }
     
     // 获取配置的角色列表
@@ -282,10 +280,10 @@ export class VoiceGenerator {
     
     // 解析所有对话
     const allDialogues = WebGALScriptCompiler.parseScript(filePath, configuredCharacters);
-    console.error(`📖 解析到 ${allDialogues.length} 条对话`);
+    logger.info(`📖 解析到 ${allDialogues.length} 条对话`);
     
     if (allDialogues.length === 0) {
-      console.error('没有找到需要处理的对话');
+      logger.info('没有找到需要处理的对话');
       return;
     }
 
@@ -293,7 +291,7 @@ export class VoiceGenerator {
 
     if (forceMode) {
       // 强制模式：清理所有相关的音频文件
-      console.error('🧹 强制模式：清理现有音频文件...');
+      logger.info('🧹 强制模式：清理现有音频文件...');
       for (const dialogue of allDialogues) {
         const audioFileName = this.generateAudioFileName(dialogue.character, dialogue.text);
         if (this.audioFileExists(audioFileName)) {
@@ -303,25 +301,25 @@ export class VoiceGenerator {
       
       // 所有对话都需要重新生成
       needVoiceDialogues = allDialogues;
-      console.error(`强制模式：将重新生成 ${needVoiceDialogues.length} 条对话的语音`);
+      logger.info(`强制模式：将重新生成 ${needVoiceDialogues.length} 条对话的语音`);
     } else {
       // 正常模式：筛选出没有音频文件的对话
-      console.error('🔍 检查音频缓存状态...');
+      logger.info('🔍 检查音频缓存状态...');
       for (const dialogue of allDialogues) {
         const audioFileName = this.generateAudioFileName(dialogue.character, dialogue.text);
         if (!this.audioFileExists(audioFileName)) {
           needVoiceDialogues.push(dialogue);
         } else {
-          console.error(`✅ 音频已缓存: ${dialogue.character} - ${dialogue.text.substring(0, 20)}...`);
+          logger.info(`✅ 音频已缓存: ${dialogue.character} - ${dialogue.text.substring(0, 20)}...`);
         }
       }
       
-      console.error(`检查完成：${allDialogues.length} 条对话中，${needVoiceDialogues.length} 条需要生成语音`);
+      logger.info(`检查完成：${allDialogues.length} 条对话中，${needVoiceDialogues.length} 条需要生成语音`);
     }
 
     // 如果没有需要生成语音的对话，直接更新脚本文件引用
     if (needVoiceDialogues.length === 0) {
-      console.error('🎉 所有对话都已有音频缓存，只需更新脚本文件引用');
+      logger.info('🎉 所有对话都已有音频缓存，只需更新脚本文件引用');
       this.updateScriptFileReferences(filePath, allDialogues);
       return;
     }
@@ -330,7 +328,7 @@ export class VoiceGenerator {
     const voiceTasks = this.createVoiceTasks(needVoiceDialogues);
     
     if (voiceTasks.length === 0) {
-      console.error('没有有效的语音生成任务');
+      logger.info('没有有效的语音生成任务');
       return;
     }
 
@@ -338,10 +336,10 @@ export class VoiceGenerator {
     const successfulTasks = await this.processTasksParallel(voiceTasks, allDialogues);
 
     // 更新脚本文件 - 包含新生成的和已缓存的音频
-    console.error('📝 更新脚本文件引用...');
+    logger.info('📝 更新脚本文件引用...');
     this.updateScriptFileReferences(filePath, allDialogues, successfulTasks);
 
-    console.error(`🎉 语音生成完成！新生成 ${successfulTasks.length} 条，复用缓存 ${allDialogues.length - needVoiceDialogues.length} 条`);
+    logger.info(`🎉 语音生成完成！新生成 ${successfulTasks.length} 条，复用缓存 ${allDialogues.length - needVoiceDialogues.length} 条`);
   }
 
   /**
@@ -365,11 +363,9 @@ export class VoiceGenerator {
       }
     }
 
-    // 读取原始文件内容
-    const originalContent = fs.readFileSync(filePath, 'utf-8');
-    const originalLines = originalContent.split('\n');
+    // 更新所有对话的音频文件信息
+    const updatedDialogues: DialogueChunk[] = [];
     
-    // 更新所有对话行
     for (const dialogue of allDialogues) {
       const contentHash = this.generateContentHash(dialogue.character, dialogue.text);
       let audioFileName: string | undefined;
@@ -386,20 +382,18 @@ export class VoiceGenerator {
         }
       }
       
-      // 更新脚本行
-      if (audioFileName) {
-        const lineIndex = dialogue.lineNumber - 1;
-        if (lineIndex >= 0 && lineIndex < originalLines.length) {
-          let newLine = `${dialogue.character}:${dialogue.text}`;
-          newLine += ` -${audioFileName}`;
-          newLine += ` -volume=${this.configManager.getDefaultVolume()}`;
-          newLine += ';';
-          originalLines[lineIndex] = newLine;
-        }
-      }
+      // 创建更新后的对话块
+      const updatedDialogue: DialogueChunk = {
+        ...dialogue,
+        audioFile: audioFileName,
+        volume: audioFileName ? this.configManager.getDefaultVolume().toString() : dialogue.volume
+      };
+      
+      updatedDialogues.push(updatedDialogue);
     }
     
-    const newContent = originalLines.join('\n');
+    // 使用新的重构方法生成脚本内容
+    const newContent = WebGALScriptCompiler.rebuildScript(filePath, updatedDialogues);
     
     // 创建备份
     try {
@@ -407,11 +401,11 @@ export class VoiceGenerator {
       this.backupManager.createBackup(filePath);
       this.backupManager.cleanOldBackups(fileName, 5);
     } catch (error) {
-      console.error('创建备份时出错:', error);
+      logger.error('创建备份时出错:', error);
     }
 
     // 写入新内容
     fs.writeFileSync(filePath, newContent);
-    console.error(`✅ 更新脚本文件: ${filePath}`);
+    logger.info(`✅ 更新脚本文件: ${filePath}`);
   }
 } 
