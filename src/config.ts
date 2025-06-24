@@ -2,6 +2,7 @@ import process from 'process';
 import path from 'path';
 import { fileURLToPath } from "url";
 import fs from 'fs'
+import { config } from 'dotenv';
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 基础配置 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -69,7 +70,9 @@ export const voiceConfig = initVoiceConfig()
 export const loadWorkDirEnv = (workDir: string): void => {
   const envPath = path.join(workDir, ".env")
   if (fs.existsSync(envPath)) {
-    process.loadEnvFile(envPath)
+    config({
+      path:envPath
+    })
     console.error(`已加载环境变量文件: ${envPath}`)
   }
 }

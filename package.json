@@ -40,6 +40,7 @@
 		"commander": "^14.0.0",
 		"crypto-js": "^4.2.0",
 		"diff": "^8.0.2",
+		"dotenv": "^16.5.0",
 		"eventsource": "^4.0.0",
 		"node-fetch": "^3.3.2",
 		"ollama-ai-provider": "^1.2.0",
