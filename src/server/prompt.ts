@@ -1,12 +1,12 @@
 import { ListPromptsRequestSchema, GetPromptRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from "path";
 import { promptsDir } from "../config.js";
 
 
 // 读取 prompts 目录下的 webgal_script_assistant.txt 文件
-const webgalScriptAssistantPrompt = await fs.readFile(path.join(promptsDir, 'webgal_script_assistant.txt'), 'utf-8');
+const webgalScriptAssistantPrompt = fs.readFileSync(path.join(promptsDir, 'webgal_script_assistant.txt'), 'utf-8');
 
 export const registerPrompts = (server: Server) => {
   // Prompt 列表处理器
