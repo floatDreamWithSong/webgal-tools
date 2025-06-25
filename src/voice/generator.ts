@@ -22,11 +22,6 @@ export interface VoiceTask {
   contentHash?: string; // 添加内容哈希字段
 }
 
-interface DeleteTask {
-  audioFileName: string;
-  filePath: string;
-}
-
 export class VoiceGenerator {
   private api: GPTSoVITSAPI;
   private audioOutputDir: string;
@@ -216,7 +211,7 @@ export class VoiceGenerator {
     }
 
     // 提取上下文信息
-    let contextMap: Map<string, string> = new Map();
+    const contextMap: Map<string, string> = new Map();
     if (allDialogues && allDialogues.length > 0 && this.configManager.isTranslateEnabled()) {
       logger.info('📖 提取对话上下文以提高翻译质量...');
       const translateConfig = this.configManager.getTranslateConfig();

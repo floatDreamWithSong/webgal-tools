@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import { VoiceTask } from './generator.js';
 import { TranslateConfig, CharacterVoiceConfig } from './config.js';
 import { GPTSoVITSAPI } from './request.js';
-import { UniversalAIService } from '../translate/ai-service.js';
 import { logger } from '../logger.js';
 
 const __filename = fileURLToPath(import.meta.url);

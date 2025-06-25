@@ -5,7 +5,7 @@ import {
   // 文档工具
   docsToolsSchema, getDocsDirectory, getDocContent,
   // 资产工具
-  assetsToolsSchema, scanWorkDirAssets, getLive2DExpression, getLive2DMotions,
+  assetsToolsSchema, scanWorkDirAssets, scanStaticFiguresHandler, scanLive2DFiguresHandler, getLive2DCharacterDetailsHandler,
   // 场景工具
   sceneToolsSchema, scanSceneScript, readSceneScript,
   writeSceneScript
@@ -41,11 +41,14 @@ export const registerTools = (server: Server) => {
         case "scan_work_dir_assets":
           return await scanWorkDirAssets(args);
 
-        case "get_live2d_expression":
-          return await getLive2DExpression(args);
+        case "scan_static_figures":
+          return await scanStaticFiguresHandler(args);
 
-        case "get_live2d_motions":
-          return await getLive2DMotions(args);
+        case "scan_live2d_figures":
+          return await scanLive2DFiguresHandler(args);
+
+        case "get_live2d_character_details":
+          return await getLive2DCharacterDetailsHandler(args);
 
         // 场景脚本工具
         case "scan_scene_script":
