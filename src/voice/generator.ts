@@ -9,7 +9,7 @@ import { VoiceConfigManager, CharacterVoiceConfig } from './config.js';
 import { BackupManager } from './backup.js';
 import { ContextExtractor } from './context.js';
 import { ParallelProcessor } from './parallel-processor.js';
-import { UniversalAIService } from '../translate/ai-service.js';
+import { TranslateService } from '../translate/index.js';
 import { logger } from '../logger.js';
 
 export interface VoiceTask {
@@ -180,22 +180,10 @@ export class VoiceGenerator {
       const translateConfig = this.configManager.getTranslateConfig();
       logger.info(`检查 ${translateConfig.model_type} 服务可用性...`);
       
-      // 对于新的AI服务，使用通用的服务检查
-      if (translateConfig.model_type && translateConfig.model_type !== 'ollama' || !translateConfig.ollama_endpoint) {
-        const aiService = new UniversalAIService();
-        const isServiceAvailable = await aiService.checkAvailability(translateConfig);
-        if (!isServiceAvailable) {
-          logger.warn(`${translateConfig.model_type} 服务不可用，将跳过翻译步骤`);
-          return [];
-        }
-      } else {
-        // 兼容旧的Ollama检查方式
-        const endpoint = translateConfig.base_url || translateConfig.ollama_endpoint;
-        const isOllamaAvailable = await checkTranslatorService(endpoint);
-        if (!isOllamaAvailable) {
-          logger.warn('Ollama服务不可用，将跳过翻译步骤');
-          return [];
-        }
+      const isServiceAvailable = await checkTranslatorService(translateConfig);
+      if (!isServiceAvailable) {
+        logger.warn(`${translateConfig.model_type} 服务不可用，将跳过翻译步骤`);
+        return [];
       }
     }
 
@@ -237,6 +225,19 @@ export class VoiceGenerator {
 
     // 使用并行处理器
     const processor = new ParallelProcessor(this.api, this.audioOutputDir);
+    
+    // 设置进度回调函数
+    processor.setCallbacks({
+      onTranslateProgress: (completed, total, result) => {
+        logger.info(`📝 翻译进度: ${completed}/${total} - ${result.character}: ${result.translatedText.substring(0, 30)}...`);
+      },
+      onVoiceProgress: (completed, total, result) => {
+        logger.info(`🎵 语音合成进度: ${completed}/${total} - ${result.character}: ${result.audioFileName}`);
+      },
+      onError: (error, task) => {
+        logger.error(`❌ 任务处理失败: ${task.character} - ${error.message}`);
+      }
+    });
     
     try {
       const translateConfig = this.configManager.getTranslateConfig();

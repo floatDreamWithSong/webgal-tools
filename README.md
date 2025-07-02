@@ -67,12 +67,11 @@ WEBGAL_VIDEO_DIR=video
 WEBGAL_FIGURE_DIR=figure
 
 # 最大翻译任务并发数
-MAX_TRANSLATOR=1
+MAX_TRANSLATOR=3
 ```
 
 - `WEBGAL_..._DIR`: 指定了不同类型资源（背景、语音、音乐等）所在的文件夹名称。
-- `MAX_TRANSLATOR`: 在执行语音合成时，可以同时进行多少个翻译任务。提高此数值可以加快多角色、多语言翻译的速度，但也会增加电脑性能消耗。并且如果你是使用的单机部署的Ollama服务，这并不会提升什么能力，因为用户机的token输出能力
-并不会特别高，并行翻译只会讲token输出能力各分一半罢了。
+- `MAX_TRANSLATOR`: 在执行翻译和语音合成时，可以同时进行多少个翻译任务。提高此数值可以加快多角色、多语言翻译的速度，但也会增加电脑性能消耗。对于大型语言模型API服务（如OpenAI、Anthropic等），较高的并发数可以显著提升效率；但如果使用的是本地部署的Ollama服务，过高的并发可能会导致性能下降，因为本地模型的推理能力有限，建议根据您的硬件配置调整此值。
 
 #### 语音与翻译配置 (`voice.config.json` 文件)
 
@@ -83,24 +82,24 @@ MAX_TRANSLATOR=1
 {
   "volume": 30,
   "gpt_sovits_url": "http://localhost:9872",
-  "gpt_sovits_path": "D:/GPT-SoVITS-v2pro",
+  "gpt_sovits_path": "D:\\AIVoice\\GPT-SoVITS-v2pro-20250604",
   "model_version": "v2",
   "translate": {
     "model_type": "ollama",
     "base_url": "http://localhost:11434/api",
-    "model_name": "gemma3:4b",
+    "model_name": "glm4:9b",
     "enabled": true,
     "context_size": 2,
-    "additional_prompt":"人名信息：睦，即：むつみ。"
+    "additional_prompt":"人名信息：睦，全名若叶（わかば）睦（むつみ）。学生"
   },
   "characters": [
     {
-      "character_name": "sakiko",
-      "gpt": "GPT_weights_v2ProPlus/Mujica_豊川祥子_白_v2pp.ckpt",
+      "character_name": "Sakiko",
+      "gpt": "GPT_weights_v2ProPlus\\Mujica_豊川祥子_白_v2pp.ckpt",
       "sovits": "SoVITS_weights_v2ProPlus\\Mujica_豊川祥子_白_v2pp.pth",
       "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\丰川祥子（白祥）\\(A)あなたと空を見上げるのは、いつも夏でしたわね.wav",
       "ref_text": "あなたと空を見上げるのは、いつも夏でしたわね",
-      "prompt": "喜欢说类似'德斯哇'的大小姐语气",
+      "prompt": "说日语喜欢说类似'德斯哇'的大小姐语气，喜欢亲切地叫若叶睦为睦。",
       "translate_to": "日文",
       "inferrence_config": {
         "prompt_language": "日文",
@@ -110,6 +109,25 @@ MAX_TRANSLATOR=1
         "top_p": 1.0,
         "temperature": 1.0,
         "speed": 1.0,
+        "sample_steps": 8,
+        "if_sr": false,
+        "pause_second": 0.3
+      }
+    },{
+      "character_name": "Uika",
+      "gpt": "GPT_weights_v2ProPlus\\Mujica_三角初華_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus\\Mujica_三角初華_v2pp.pth",
+      "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\三角初华\\(A)まなちゃんソロの仕事も始まって、大変なときなのに.wav",
+      "ref_text": "まなちゃんソロの仕事も始まって、大変なときなのに",
+      "translate_to": "日文",
+      "inferrence_config": {
+        "prompt_language": "日文",
+        "text_language": "日文",
+        "how_to_cut": "凑四句一切",
+        "top_k": 15,
+        "top_p": 1.0,
+        "temperature": 1.0,
+        "speed": 0.9,
         "sample_steps": 8,
         "if_sr": false,
         "pause_second": 0.3
@@ -269,12 +287,12 @@ MAX_TRANSLATOR=1
 - 在执行语音生成前，会自动检查 `vocal` 目录下是否已存在对应的音频文件
 - 如果文件已存在，直接跳过生成任务并在脚本中引用现有音频
 - 这种设计实现了跨文件的音频复用，大大提升了生成效率
-5.  **翻译 (如果启用)**：将新的或修改过的对话，根据 `voice.config.json` 中的配置，发送给翻译模型进行翻译。为了保证质量，翻译时会自动附带上下文。
-6.  **语音合成**：将原文或翻译后的文本，通过任务消息机制，连同对应的角色模型配置，发送给 GPT-SoVITS 服务进行语音合成。
+5.  **翻译 (如果启用)**：将新的或修改过的对话，根据 `voice.config.json` 中的配置，发送给翻译模型进行翻译。为了保证质量，翻译时会自动附带上下文。系统使用基于Promise的并发控制，可同时处理多个翻译任务，显著提升效率。
+6.  **语音合成**：将原文或翻译后的文本，连同对应的角色模型配置，发送给 GPT-SoVITS 服务进行语音合成。语音合成过程保持单线程执行，以避免模型切换冲突。
 7.  **更新脚本**：将生成好的语音文件（`.wav`）引用自动插入到剧本文件中。
 8.  **备份**：在修改脚本前，会自动在 `.voice-backups` 目录下创建备份，防止意外。
 
-整个过程采用并行处理和智能队列任务排序，优先处理同一角色的任务以减少模型切换开销，大幅提升效率。
+整个过程采用基于Promise的并发控制和智能队列任务排序，翻译阶段可并行执行多个任务，语音合成阶段优先处理同一角色的任务以减少模型切换开销，大幅提升效率。系统还提供详细的进度回调，让您实时了解处理状态。
 
 ### 使用方式
 
@@ -306,7 +324,41 @@ npx openwebgal-mcp-server -voice scene1.txt -force -webgal <你的游戏目录>
     - 不要选择思考模型，思考模型输出的效率极低。 
     - 目前作者的体验是，gemma3:4b能较好的完成翻译流畅性，glm4:9b能较好的贴切语境和人物语言特色翻译
 
-## 6. 二次定制开发简略指南
+## 6. 并行处理系统
+
+本项目采用了高效的并行处理系统，特别是在翻译和语音合成方面：
+
+### 并发控制架构
+
+- **基于Promise的并发控制**：使用现代JavaScript的Promise机制实现高效的并发任务处理，相比传统的多进程架构，更加轻量和灵活。
+- **智能队列管理**：翻译任务采用并行处理，而语音合成任务则使用智能排序的单线程队列，确保同一角色的任务连续处理，减少模型切换开销。
+- **自适应并发限制**：通过环境变量`MAX_TRANSLATOR`控制最大并发数，系统会自动管理并发任务数量，避免资源竞争。
+
+### 性能优化
+
+- **翻译阶段**：多任务并发执行，充分利用API服务的并发能力。
+- **语音合成阶段**：优先处理同一角色的任务，减少模型切换次数，显著提升效率。
+- **资源管理**：自动清理模型缓存，及时释放内存资源。
+
+### 进度监控
+
+系统提供完善的进度回调机制，让您可以实时了解：
+- 翻译进度：已完成/总任务数，当前处理的角色和文本
+- 语音合成进度：已完成/总任务数，当前处理的角色和文件
+- 错误处理：详细的错误信息和相关任务内容
+
+这一设计使得整个翻译和语音合成过程更加高效、透明，同时保持了稳定性和可靠性。
+
+### 迁移指南
+
+如果您正在从旧版本升级，请注意以下变化：
+
+1. 环境变量 `MAX_TRANSLATOR` 现在用于控制Promise并发数量
+2. 移除了多进程架构，改用基于Promise的并发控制
+3. 新增了进度回调函数API，可通过 `setCallbacks()` 方法设置
+4. 所有翻译服务统一通过 `TranslateService` 类处理，支持更多模型供应商
+
+## 7. 二次定制开发简略指南
 
 如果您具备一定的编程基础（了解 TypeScript/JavaScript），您可以对本项目进行更深度的定制。
 

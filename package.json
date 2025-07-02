@@ -1,6 +1,6 @@
 {
 	"name": "openwebgal-mcp-server",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "A model-context-protocol server for WebGAL documentation, providing tools, prompts and resources.",
 	"type": "module",
 	"main": "dist/main.js",

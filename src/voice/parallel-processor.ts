@@ -1,13 +1,9 @@
-import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { VoiceTask } from './generator.js';
 import { TranslateConfig, CharacterVoiceConfig } from './config.js';
 import { GPTSoVITSAPI } from './request.js';
+import { TranslateService } from '../translate/index.js';
 import { logger } from '../logger.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 interface TranslateTask {
   id: string;
@@ -16,6 +12,7 @@ interface TranslateTask {
   targetLanguage: string;
   audioFileName: string;
   context?: string;
+  characterConfig?: CharacterVoiceConfig;
 }
 
 interface TranslateResult {
@@ -33,195 +30,187 @@ interface VoiceSynthesisTask extends VoiceTask {
   characterConfig: CharacterVoiceConfig;
 }
 
+/**
+ * 并发控制器 - 基于Promise而非多进程
+ */
 export class ParallelProcessor {
-  private translateWorkers: ChildProcess[] = [];
-  private pendingTranslations = new Map<string, TranslateTask>();
-  private completedTranslations = new Map<string, TranslateResult>();
-  private voiceTasks: VoiceSynthesisTask[] = [];
-  private completedVoiceTasks: VoiceTask[] = [];
   private api: GPTSoVITSAPI;
   private audioOutputDir: string;
+  private translateService: TranslateService;
 
+  // 状态跟踪
   private totalTasks = 0;
   private completedTranslateCount = 0;
   private completedVoiceCount = 0;
+  private completedVoiceTasks: VoiceTask[] = [];
 
-  // 语音合成队列
+  // 语音合成队列和状态
   private voiceQueue: TranslateResult[] = [];
   private isVoiceSynthesizing = false;
   private currentCharacter: string | null = null;
 
   // 并发控制
-  private maxTranslators: number;
-  private activeTranslators = 0;
-  private pendingTaskQueue: { config: TranslateConfig; task: TranslateTask }[] = [];
-  private currentWorkerIndex = 0; // 轮询负载均衡的当前索引
+  private maxConcurrency: number;
+  private activeTranslations = 0;
+
+  // 回调函数
+  private onTranslateProgress?: (completed: number, total: number, result: TranslateResult) => void;
+  private onVoiceProgress?: (completed: number, total: number, result: VoiceTask) => void;
+  private onError?: (error: Error, task: TranslateTask | VoiceTask) => void;
 
   constructor(api: GPTSoVITSAPI, audioOutputDir: string) {
     this.api = api;
     this.audioOutputDir = audioOutputDir;
-    // 从环境变量获取最大翻译并发数，默认为1（保持单线程）
-    this.maxTranslators = parseInt(process.env.MAX_TRANSLATOR || '1');
-    logger.info(`🔧 最大翻译并发数: ${this.maxTranslators}`);
+    this.translateService = new TranslateService();
+    // 从环境变量获取最大并发数，默认为3
+    this.maxConcurrency = parseInt(process.env.MAX_TRANSLATOR || '3');
+    logger.info(`🔧 最大并发数: ${this.maxConcurrency}`);
   }
 
   /**
-   * 启动翻译子进程
+   * 设置进度回调函数
    */
-  private async startTranslateWorkers(): Promise<void> {
-    const promises: Promise<void>[] = [];
-
-    for (let i = 0; i < this.maxTranslators; i++) {
-      promises.push(this.createTranslateWorker(i));
-    }
-
-    await Promise.all(promises);
-    logger.info(`🚀 已启动 ${this.maxTranslators} 个翻译子进程`);
+  setCallbacks(callbacks: {
+    onTranslateProgress?: (completed: number, total: number, result: TranslateResult) => void;
+    onVoiceProgress?: (completed: number, total: number, result: VoiceTask) => void;
+    onError?: (error: Error, task: TranslateTask | VoiceTask) => void;
+  }): void {
+    this.onTranslateProgress = callbacks.onTranslateProgress;
+    this.onVoiceProgress = callbacks.onVoiceProgress;
+    this.onError = callbacks.onError;
   }
 
   /**
-   * 创建单个翻译子进程
+   * 限制并发执行的Promise工具函数
    */
-  private async createTranslateWorker(index: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const workerPath = path.join(__dirname, 'translate-worker.js');
-      const worker = spawn('node', [workerPath], {
-        stdio: ['pipe', 'pipe', 'pipe', 'ipc']
-      });
+  private async limitConcurrency<T>(
+    tasks: (() => Promise<T>)[],
+    limit: number,
+    onProgress?: (completed: number, total: number, result: T) => void
+  ): Promise<T[]> {
+    const results: T[] = [];
+    const executing: Promise<void>[] = [];
+    let completed = 0;
 
-      worker.on('message', (message: any) => {
-        this.handleWorkerMessage(message, index);
-      });
-
-      worker.on('error', (error: any) => {
-        logger.info(`翻译子进程 ${index} 错误:`, error);
-        reject(error);
-      });
-
-      worker.on('exit', (code: any) => {
-        logger.info(`翻译子进程 ${index} 退出，代码: ${code}`);
-        this.activeTranslators--;
-        // 重置轮询索引以避免指向已退出的进程
-        this.currentWorkerIndex = 0;
-        // 处理待处理队列
-        this.processTranslateQueue();
-      });
-
-      this.translateWorkers[index] = worker;
-
-      // 等待子进程准备就绪
-      worker.once('message', (message: any) => {
-        if (message.type === 'ready') {
-          logger.info(`🚀 翻译子进程 ${index} 已启动`);
-          resolve();
-        } else {
-          reject(new Error(`翻译子进程 ${index} 启动失败`));
+    for (const task of tasks) {
+      const promise = task().then((result) => {
+        completed++;
+        results.push(result);
+        if (onProgress) {
+          onProgress(completed, tasks.length, result);
         }
       });
-    });
-  }
 
-  /**
-   * 处理翻译子进程的消息
-   */
-  private handleWorkerMessage(message: any, workerIndex: number): void {
-    if (message.type === 'translated') {
-      const result: TranslateResult = message.result;
-      logger.info(`✅ 翻译完成 [Worker ${workerIndex}]: ${result.character} - ${result.translatedText.substring(0, 20)}...`);
+      executing.push(promise);
 
-      this.completedTranslations.set(result.id, result);
-      this.completedTranslateCount++;
-      this.activeTranslators--;
-
-      // 将翻译结果加入语音合成队列
-      this.enqueueVoiceSynthesis(result);
-
-      // 处理待处理队列
-      this.processTranslateQueue();
-
-      // 检查是否所有翻译都完成了
-      if (this.completedTranslateCount >= this.totalTasks) {
-        this.stopTranslateWorkers();
-      }
-    } else if (message.type === 'error') {
-      logger.error(`翻译子进程 ${workerIndex} 错误:`, message.message);
-      this.activeTranslators--;
-      this.processTranslateQueue();
-    }
-  }
-
-  /**
-   * 处理翻译任务队列
-   */
-  private processTranslateQueue(): void {
-    while (this.pendingTaskQueue.length > 0 && this.activeTranslators < this.maxTranslators) {
-      const { config, task } = this.pendingTaskQueue.shift()!;
-      logger.info(`🔄 从队列处理任务: ${task.character} (队列剩余: ${this.pendingTaskQueue.length})`);
-      this.sendTranslateTask(config, task);
-    }
-  }
-
-  /**
-   * 发送翻译任务到可用的子进程（轮询负载均衡）
-   */
-  private sendTranslateTask(config: TranslateConfig, task: TranslateTask): void {
-    // 如果已达到最大并发数，加入队列
-    if (this.activeTranslators >= this.maxTranslators) {
-      this.pendingTaskQueue.push({ config, task });
-      logger.info(`📋 任务加入队列: ${task.character} (当前活跃: ${this.activeTranslators}/${this.maxTranslators})`);
-      return;
-    }
-
-    // 轮询负载均衡：从当前索引开始查找可用的子进程
-    let attempts = 0;
-    while (attempts < this.translateWorkers.length) {
-      const workerIndex = this.currentWorkerIndex;
-      const worker = this.translateWorkers[workerIndex];
-
-      // 更新下一个轮询索引
-      this.currentWorkerIndex = (this.currentWorkerIndex + 1) % this.translateWorkers.length;
-      attempts++;
-
-      if (worker && !worker.killed) {
-        this.activeTranslators++;
-        worker.send({
-          type: 'translate',
-          config,
-          task
-        });
-        logger.info(`📤 发送翻译任务到 Worker ${workerIndex}: ${task.character} (负载: ${this.activeTranslators}/${this.maxTranslators})`);
-        return;
+      if (executing.length >= limit) {
+        await Promise.race(executing);
+        executing.splice(executing.findIndex(p => 
+          p === promise || (p as any)._isCompleted
+        ), 1);
       }
     }
 
-    // 如果所有子进程都不可用，加入队列
-    this.pendingTaskQueue.push({ config, task });
-    logger.error(`⚠️ 所有子进程不可用，任务加入队列: ${task.character}`);
+    await Promise.all(executing);
+    return results;
   }
 
   /**
-   * 将翻译结果加入语音合成队列（使用智能插入法）
+   * 执行单个翻译任务
+   */
+  private async translateSingleTask(
+    task: TranslateTask,
+    config: TranslateConfig
+  ): Promise<TranslateResult> {
+    try {
+      logger.info(`🔄 开始翻译: ${task.character} - ${task.originalText.substring(0, 20)}...`);
+
+      const translatedText = await this.translateService.translate(
+        task.character,
+        task.originalText,
+        task.targetLanguage,
+        config,
+        task.characterConfig,
+        task.context
+      );
+
+      const result: TranslateResult = {
+        id: task.id,
+        character: task.character,
+        originalText: task.originalText,
+        translatedText,
+        audioFileName: task.audioFileName,
+        success: true
+      };
+
+      logger.info(`✅ 翻译完成: ${task.character} - ${translatedText.substring(0, 20)}...`);
+      return result;
+
+    } catch (error) {
+      logger.error(`❌ 翻译失败 ${task.character}:`, error);
+      
+      const result: TranslateResult = {
+        id: task.id,
+        character: task.character,
+        originalText: task.originalText,
+        translatedText: task.originalText, // 失败时使用原文
+        audioFileName: task.audioFileName,
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      };
+
+      if (this.onError) {
+        this.onError(error instanceof Error ? error : new Error(String(error)), task);
+      }
+
+      return result;
+    }
+  }
+
+  /**
+   * 并发执行翻译任务
+   */
+  private async translateTasks(
+    tasks: TranslateTask[],
+    config: TranslateConfig
+  ): Promise<TranslateResult[]> {
+    if (tasks.length === 0) {
+      return [];
+    }
+
+    logger.info(`🚀 开始并发翻译 ${tasks.length} 个任务，最大并发数: ${this.maxConcurrency}`);
+
+    const taskFunctions = tasks.map(task => 
+      () => this.translateSingleTask(task, config)
+    );
+
+    return this.limitConcurrency(
+      taskFunctions,
+      this.maxConcurrency,
+      (completed, total, result) => {
+        this.completedTranslateCount = completed;
+        if (this.onTranslateProgress) {
+          this.onTranslateProgress(completed, total, result);
+        }
+        // 将翻译完成的任务加入语音合成队列
+        this.enqueueVoiceSynthesis(result);
+      }
+    );
+  }
+
+  /**
+   * 将翻译结果加入语音合成队列
    */
   private enqueueVoiceSynthesis(translateResult: TranslateResult): void {
-    // 智能插入法：从队列头部开始扫描，找到最后一个相同名字的任务
-    let insertIndex = this.voiceQueue.length; // 默认插入到末尾
+    this.voiceQueue.push(translateResult);
+    logger.info(`📋 加入语音合成队列: ${translateResult.character} (队列长度: ${this.voiceQueue.length})`);
 
-    for (let i = this.voiceQueue.length - 1; i >= 0; i--) {
-      if (this.voiceQueue[i].character === translateResult.character) {
-        insertIndex = i + 1; // 插入到最后一个相同角色任务之后
-        break;
-      }
-    }
-
-    this.voiceQueue.splice(insertIndex, 0, translateResult);
-    logger.info(`📝 语音任务入队: ${translateResult.character} (位置: ${insertIndex}, 队列长度: ${this.voiceQueue.length})`);
-
-    // 尝试处理队列
+    // 触发语音合成处理
     this.processVoiceQueue();
   }
 
   /**
-   * 处理语音合成队列
+   * 处理语音合成队列（保持单线程以避免模型切换冲突）
    */
   private async processVoiceQueue(): Promise<void> {
     if (this.isVoiceSynthesizing || this.voiceQueue.length === 0) {
@@ -233,12 +222,10 @@ export class ParallelProcessor {
     while (this.voiceQueue.length > 0) {
       const translateResult = this.voiceQueue.shift()!;
 
-      // 如果需要切换角色，优先处理同一角色的任务
+      // 优先处理同一角色的任务
       if (this.currentCharacter && this.currentCharacter !== translateResult.character) {
-        // 查找队列中是否有当前角色的任务
         const sameCharacterIndex = this.voiceQueue.findIndex(task => task.character === this.currentCharacter);
         if (sameCharacterIndex !== -1) {
-          // 将当前任务放回队列，优先处理同角色任务
           this.voiceQueue.unshift(translateResult);
           const sameCharacterTask = this.voiceQueue.splice(sameCharacterIndex + 1, 1)[0];
           await this.synthesizeVoice(sameCharacterTask);
@@ -256,27 +243,24 @@ export class ParallelProcessor {
    * 执行语音合成
    */
   private async synthesizeVoice(translateResult: TranslateResult): Promise<void> {
-    // 找到对应的语音任务
-    const voiceTask = this.voiceTasks.find(task => task.id === translateResult.id);
-    if (!voiceTask) {
-      logger.error(`❌ 未找到对应的语音任务: ${translateResult.id}`);
-      this.completedVoiceCount++;
-      return;
-    }
-
     try {
       logger.info(`🎵 开始语音合成: ${translateResult.character} (队列剩余: ${this.voiceQueue.length})`);
+
+      // 找到对应的角色配置
+      const characterConfig = this.characterConfigs?.get(translateResult.character);
+      if (!characterConfig) {
+        throw new Error(`未找到角色配置: ${translateResult.character}`);
+      }
 
       // 检查是否需要切换角色模型
       if (this.currentCharacter !== translateResult.character) {
         logger.info(`🔄 切换到角色: ${translateResult.character}`);
 
-        // 设置角色模型
-        await this.api.setGptModel(voiceTask.characterConfig.gpt);
+        await this.api.setGptModel(characterConfig.gpt);
         await this.api.setSovitsModel(
-          voiceTask.characterConfig.sovits,
-          voiceTask.characterConfig.inferrence_config?.prompt_language || '中文',
-          voiceTask.characterConfig.inferrence_config?.text_language || '中文'
+          characterConfig.sovits,
+          characterConfig.inferrence_config?.prompt_language || '中文',
+          characterConfig.inferrence_config?.text_language || '中文'
         );
 
         this.currentCharacter = translateResult.character;
@@ -284,10 +268,10 @@ export class ParallelProcessor {
 
       // 生成语音
       const outputPath = await this.api.generateVoice(
-        voiceTask.characterConfig.ref_audio,
-        voiceTask.characterConfig.ref_text,
+        characterConfig.ref_audio,
+        characterConfig.ref_text,
         translateResult.translatedText,
-        voiceTask.characterConfig.inferrence_config || {}
+        characterConfig.inferrence_config || {}
       );
 
       // 下载音频文件
@@ -307,30 +291,31 @@ export class ParallelProcessor {
 
       logger.info(`✅ 语音合成完成: ${translateResult.character} - ${translateResult.audioFileName}`);
 
+      if (this.onVoiceProgress) {
+        this.onVoiceProgress(this.completedVoiceCount, this.totalTasks, completedTask);
+      }
+
     } catch (error) {
       logger.error(`❌ 语音合成失败 ${translateResult.character}:`, error);
       this.completedVoiceCount++;
-    }
-  }
 
-  /**
-   * 停止所有翻译子进程
-   */
-  private stopTranslateWorkers(): void {
-    for (let i = 0; i < this.translateWorkers.length; i++) {
-      const worker = this.translateWorkers[i];
-      if (worker && !worker.killed) {
-        worker.kill();
-        logger.info(`🛑 翻译子进程 ${i} 已关闭`);
+      if (this.onError) {
+        const voiceTask: VoiceTask = {
+          character: translateResult.character,
+          originalText: translateResult.originalText,
+          targetText: translateResult.translatedText,
+          audioFileName: translateResult.audioFileName
+        };
+        this.onError(error instanceof Error ? error : new Error(String(error)), voiceTask);
       }
     }
-    this.translateWorkers = [];
-    this.activeTranslators = 0;
-    logger.info('🛑 所有翻译子进程已关闭');
   }
 
+  // 存储角色配置的引用
+  private characterConfigs?: Map<string, CharacterVoiceConfig>;
+
   /**
-   * 处理翻译和语音合成任务
+   * 处理翻译和语音合成任务（新的基于Promise的实现）
    */
   async processTasksParallel(
     voiceTasks: VoiceTask[],
@@ -339,11 +324,12 @@ export class ParallelProcessor {
     contextMap: Map<string, string>
   ): Promise<VoiceTask[]> {
 
+    this.characterConfigs = characterConfigs;
     this.totalTasks = voiceTasks.length;
     this.completedTranslateCount = 0;
     this.completedVoiceCount = 0;
     this.completedVoiceTasks = [];
-    this.voiceTasks = [];
+    this.voiceQueue = [];
 
     if (this.totalTasks === 0) {
       return [];
@@ -351,10 +337,10 @@ export class ParallelProcessor {
 
     logger.info(`🚀 开始并行处理 ${this.totalTasks} 个任务`);
 
-    // 启动翻译子进程
-    await this.startTranslateWorkers();
+    // 准备翻译任务
+    const translateTasks: TranslateTask[] = [];
+    const noTranslateTasks: TranslateResult[] = [];
 
-    // 准备语音任务
     for (const task of voiceTasks) {
       const characterConfig = characterConfigs.get(task.character);
       if (!characterConfig) {
@@ -362,34 +348,29 @@ export class ParallelProcessor {
         continue;
       }
 
-      const voiceTask: VoiceSynthesisTask = {
-        ...task,
-        id: `${task.character}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        characterConfig
-      };
+      const taskId = `${task.character}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      this.voiceTasks.push(voiceTask);
-
-      // 发送翻译任务给子进程
       const translateTarget = characterConfig.translate_to;
       if (translateTarget) {
+        // 需要翻译
         const taskKey = `${task.character}:${task.originalText}`;
         const context = contextMap.get(taskKey);
 
         const translateTask: TranslateTask = {
-          id: voiceTask.id,
+          id: taskId,
           character: task.character,
           originalText: task.originalText,
           targetLanguage: translateTarget,
           audioFileName: task.audioFileName,
-          context
+          context,
+          characterConfig
         };
 
-        this.sendTranslateTask(translateConfig, translateTask);
+        translateTasks.push(translateTask);
       } else {
-        // 不需要翻译，直接使用原文进行语音合成
+        // 不需要翻译，直接使用原文
         const result: TranslateResult = {
-          id: voiceTask.id,
+          id: taskId,
           character: task.character,
           originalText: task.originalText,
           translatedText: task.originalText,
@@ -397,9 +378,18 @@ export class ParallelProcessor {
           success: true
         };
 
-        this.completedTranslateCount++;
-        this.enqueueVoiceSynthesis(result);
+        noTranslateTasks.push(result);
       }
+    }
+
+    // 先将不需要翻译的任务加入语音合成队列
+    for (const result of noTranslateTasks) {
+      this.enqueueVoiceSynthesis(result);
+    }
+
+    // 并发执行翻译任务
+    if (translateTasks.length > 0) {
+      await this.translateTasks(translateTasks, translateConfig);
     }
 
     // 等待所有任务完成
@@ -421,6 +411,8 @@ export class ParallelProcessor {
    * 清理资源
    */
   cleanup(): void {
-    this.stopTranslateWorkers();
+    // 清理翻译服务缓存
+    this.translateService.clearCache();
+    logger.info('🛑 并行处理器资源已清理');
   }
 } 

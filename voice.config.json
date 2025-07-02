@@ -6,19 +6,19 @@
   "translate": {
     "model_type": "ollama",
     "base_url": "http://localhost:11434/api",
-    "model_name": "gemma3:4b",
+    "model_name": "glm4:9b",
     "enabled": true,
     "context_size": 2,
-    "additional_prompt":"人名信息：睦，即：むつみ。"
+    "additional_prompt":"人名信息：睦，全名若叶（わかば）睦（むつみ）。学生"
   },
   "characters": [
     {
-      "character_name": "sakiko",
+      "character_name": "Sakiko",
       "gpt": "GPT_weights_v2ProPlus\\Mujica_豊川祥子_白_v2pp.ckpt",
       "sovits": "SoVITS_weights_v2ProPlus\\Mujica_豊川祥子_白_v2pp.pth",
       "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\丰川祥子（白祥）\\(A)あなたと空を見上げるのは、いつも夏でしたわね.wav",
       "ref_text": "あなたと空を見上げるのは、いつも夏でしたわね",
-      "prompt": "喜欢说类似'德斯哇'的大小姐语气",
+      "prompt": "说日语喜欢说类似'德斯哇'的大小姐语气，喜欢亲切地叫若叶睦为睦。",
       "translate_to": "日文",
       "inferrence_config": {
         "prompt_language": "日文",
@@ -28,6 +28,25 @@
         "top_p": 1.0,
         "temperature": 1.0,
         "speed": 1.0,
+        "sample_steps": 8,
+        "if_sr": false,
+        "pause_second": 0.3
+      }
+    },{
+      "character_name": "Uika",
+      "gpt": "GPT_weights_v2ProPlus\\Mujica_三角初華_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus\\Mujica_三角初華_v2pp.pth",
+      "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\三角初华\\(A)まなちゃんソロの仕事も始まって、大変なときなのに.wav",
+      "ref_text": "まなちゃんソロの仕事も始まって、大変なときなのに",
+      "translate_to": "日文",
+      "inferrence_config": {
+        "prompt_language": "日文",
+        "text_language": "日文",
+        "how_to_cut": "凑四句一切",
+        "top_k": 15,
+        "top_p": 1.0,
+        "temperature": 1.0,
+        "speed": 0.9,
         "sample_steps": 8,
         "if_sr": false,
         "pause_second": 0.3
