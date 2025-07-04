@@ -5,6 +5,24 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "example/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/webgal-mcp.git",
+    "directory": "packages/config"
+  },
+  "keywords": [
+    "webgal",
+    "mcp",
+    "config",
+    "configuration"
+  ],
   "scripts": {
     "build": "tsc && pnpm run copy-resources",
     "dev": "tsc --watch",

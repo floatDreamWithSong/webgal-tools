@@ -7,12 +7,32 @@
   "bin": {
     "webgal-voice": "dist/main.js"
   },
+  "files": [
+    "dist/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/floatDreamWithSong/webgal-tools.git",
+    "directory": "apps/voice"
+  },
+  "keywords": [
+    "webgal",
+    "voice",
+    "gpt-sovits",
+    "tts",
+    "text-to-speech",
+    "ai"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rimraf dist",
     "serve": "node dist/main.js",
-    "test": "node dist/main.js -webgal D:/file/WebGal/webgal-mcp/game -voice"
+    "test": "node dist/main.js -webgal D:/file/WebGal/webgal-mcp/game -voice",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@webgal-mcp/config": "workspace:*",

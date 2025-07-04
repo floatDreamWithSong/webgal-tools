@@ -1,9 +1,9 @@
 {
 	"name": "webgal-tools",
-	"version": "2.1.0",
+	"version": "1.0.0",
 	"description": "WebGAL 工具包",
 	"type": "module",
-	"private": true,
+	"private": false,
 	"packageManager": "pnpm@8.15.6",
 	"workspaces": [
 		"apps/*",
@@ -19,7 +19,13 @@
 		"mcp:test": "pnpm --filter=@webgal-mcp/mcp-server run test",
 		"mcp:test:sse": "pnpm --filter=@webgal-mcp/mcp-server run test:sse",
 		"voice": "pnpm --filter=@webgal-mcp/voice run serve",
-		"voice:test": "pnpm --filter=@webgal-mcp/voice run test"
+		"voice:test": "pnpm --filter=@webgal-mcp/voice run test",
+		"publish:check": "node scripts/publish.js check",
+		"publish:version": "node scripts/publish.js version",
+		"publish:build": "node scripts/publish.js build",
+		"publish:all": "node scripts/publish.js publish",
+		"publish:beta": "node scripts/publish.js publish",
+		"release": "pnpm run publish:build && pnpm run publish:all"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.29.0",

@@ -5,6 +5,23 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/webgal-mcp.git",
+    "directory": "packages/logger"
+  },
+  "keywords": [
+    "webgal",
+    "mcp",
+    "logger",
+    "logging"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
