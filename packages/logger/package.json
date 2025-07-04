@@ -1,0 +1,18 @@
+{
+  "name": "@webgal-mcp/logger",
+  "version": "1.0.0",
+  "description": "统一的日志记录服务",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+} 

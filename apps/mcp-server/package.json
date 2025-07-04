@@ -1,0 +1,30 @@
+{
+  "name": "@webgal-mcp/mcp-server",
+  "version": "1.5.0",
+  "description": "WebGAL MCP服务器应用",
+  "type": "module",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "bin": {
+    "webgal-mcp": "dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "serve": "node dist/main.js",
+    "serve:sse": "node dist/main.js --sse",
+    "serve:sse:port": "node dist/main.js --sse --port 3001",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@webgal-mcp/config": "workspace:*",
+    "@webgal-mcp/logger": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.3",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+} 

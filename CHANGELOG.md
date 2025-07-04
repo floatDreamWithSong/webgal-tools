@@ -92,6 +92,44 @@
 ### 移除
 - 无
 
+## [2.0.0] - 2025-07-04
+
+### 重大变更 (Breaking Changes)
+- 🏗️ **重构为多包管理架构**: 使用Turborepo将项目拆分为多个独立的npm包
+- 📦 **新的包结构**: 
+  - `apps/mcp-server`: MCP服务器应用
+  - `apps/voice`: 语音合成应用  
+  - `packages/config`: 统一配置管理包
+  - `packages/logger`: 统一日志服务包
+
+### 新增
+- 新增Turborepo支持，实现高效的多包构建和开发
+- 新增统一的配置管理系统 (`@webgal-mcp/config`)
+- 新增统一的日志服务 (`@webgal-mcp/logger`)
+- 新增workspace依赖管理，支持包间引用
+- 新增独立的语音合成应用模块
+
+### 变更
+- 将所有源代码重新组织到对应的包中
+- 更新构建系统，支持并行构建多个包
+- 更新文档路径，知识库文档移动到 `apps/mcp-server/resource/docs`
+- 更新配置示例文件位置到 `packages/config/example`
+- 更新所有导入路径以使用新的包结构
+
+### 修复
+- 修复类型兼容性问题
+- 修复包间依赖关系
+- 修复资源文件路径解析
+
+### 移除
+- 移除根目录下的旧源代码结构
+- 移除旧的配置文件加载方式
+
+### 迁移指南
+- 构建命令: `pnpm build` (使用turbo并行构建)
+- 运行命令: `pnpm serve` 或 `node apps/mcp-server/dist/main.js`
+- 配置文件: 示例文件位于 `packages/config/example/`
+
 
 ---
 

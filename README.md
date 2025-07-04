@@ -232,7 +232,45 @@ MAX_TRANSLATOR=3
 
 配置完成后，AI 助手就具备了多种能力。您可以通过兼容 MCP 协议的客户端（如配置好的聊天机器人）来使用这些能力。
 
-### 🚀 运行模式
+### 🏗️ 项目架构
+
+本项目采用基于 Turborepo 的多包管理架构：
+
+```
+webgal-mcp/
+├── apps/
+│   ├── mcp-server/          # MCP服务器应用
+│   │   ├── src/             # 服务器源代码
+│   │   └── resource/        # 静态资源
+│   │       ├── docs/        # 知识库文档
+│   │       └── prompts/     # MCP提示词
+│   └── voice/               # 语音合成应用
+│       └── src/             # 语音合成源代码
+├── packages/
+│   ├── config/              # 统一配置管理
+│   │   ├── src/             # 配置源代码
+│   │   └── example/         # 配置示例文件
+│   └── logger/              # 统一日志服务
+│       └── src/             # 日志源代码
+└── turbo.json              # Turborepo配置
+```
+
+## 🚀 运行模式
+
+### 构建项目
+
+```bash
+# 构建所有包
+pnpm build
+
+# 开发模式（监听文件变化）
+pnpm dev
+
+# 清理构建输出
+pnpm clean
+```
+
+### 运行MCP服务器
 
 本项目支持两种运行模式：
 
@@ -241,10 +279,10 @@ MAX_TRANSLATOR=3
 
 ```bash
 # 启动stdio模式
-npx openwebgal-mcp-server -webgal /path/to/your/game
+pnpm serve -webgal /path/to/your/game
 
-# 或使用已构建的版本
-node dist/main.js -webgal /path/to/your/game
+# 或直接使用构建输出
+node apps/mcp-server/dist/main.js -webgal /path/to/your/game
 ```
 
 #### 2. SSE模式（Server-Sent Events）
@@ -252,13 +290,13 @@ node dist/main.js -webgal /path/to/your/game
 
 ```bash
 # 启动SSE服务器，默认端口3000
-npx openwebgal-mcp-server -webgal /path/to/your/game --sse
+pnpm serve:sse -webgal /path/to/your/game
 
 # 使用自定义端口
-npx openwebgal-mcp-server -webgal /path/to/your/game --sse --port 8080
+pnpm serve:sse:port -webgal /path/to/your/game
 
-# 或使用已构建的版本
-node dist/main.js -webgal /path/to/your/game --sse --port 3000
+# 或直接使用构建输出
+node apps/mcp-server/dist/main.js -webgal /path/to/your/game --sse --port 3000
 ```
 
 SSE模式启动后会提供以下端点：
