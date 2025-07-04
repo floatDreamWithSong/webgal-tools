@@ -1,0 +1,52 @@
+{
+  "name": "@webgal-tools/mcp-server",
+  "version": "1.5.0",
+  "description": "WebGAL MCP服务器应用",
+  "type": "module",
+  "main": "dist/main.js",
+  "bin": {
+    "webgal-mcp-server": "dist/main.js"
+  },
+  "files": [
+    "dist/**/*",
+    "resource/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/floatDreamWithSong/webgal-tools.git",
+    "directory": "apps/mcp-server"
+  },
+  "keywords": [
+    "webgal",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "gaming"
+  ],
+  "scripts": {
+    "build": "tsc && pnpm run copy-resources",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "copy-resources": "xcopy /E /I /Y resource dist\\resource",
+    "serve": "node dist/main.js",
+    "serve:sse": "node dist/main.js --sse",
+    "serve:sse:port": "node dist/main.js --sse --port 3001",
+    "test": "pnpm dlx @modelcontextprotocol/inspector node dist/main.js -webgal D:/file/WebGal/webgal-mcp/game",
+    "test:sse": "node dist/main.js -webgal D:/file/WebGal/webgal-mcp/game --sse",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@webgal-tools/config": "workspace:*",
+    "@webgal-tools/logger": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.3",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+} 

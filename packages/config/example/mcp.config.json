@@ -1,0 +1,10 @@
+{
+  "directories": {
+    "background": "background",
+    "vocal": "vocal", 
+    "bgm": "bgm",
+    "animation": "animation",
+    "video": "video",
+    "figure": "figure"
+  }
+} 

@@ -1,66 +1,44 @@
 {
-	"name": "openwebgal-mcp-server",
-	"version": "1.4.0",
-	"description": "A model-context-protocol server for WebGAL documentation, providing tools, prompts and resources.",
+	"name": "webgal-tools",
+	"version": "1.0.1",
+	"description": "WebGAL 工具包",
 	"type": "module",
-	"main": "dist/main.js",
-	"types": "dist/main.d.ts",
-	"bin": {
-		"webgal-mcp": "dist/main.js"
-	},
-	"scripts": {
-		"start": "node --loader ts-node/esm src/voice/request.ts",
-		"dev": "tsc --watch",
-		"build": "tsc",
-		"serve": "node dist/main.js",
-		"test": "pnpm dlx @modelcontextprotocol/inspector node dist/main.js -webgal D:/file/WebGal/release/public/games/新的游戏/game",
-		"prepublishOnly": "pnpm run build",
-		"test:voice": "node dist/main.js -webgal D:/file/WebGal/release/public/games/新的游戏/game -voice "
-	},
-	"files": [
-		"dist",
-		"docs",
-		"prompts",
-		"env.example",
-		"voice.config.json"
+	"private": false,
+	"packageManager": "pnpm@8.15.6",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
 	],
-	"publishConfig": {
-		"access": "public"
-	},
-	"dependencies": {
-		"@ai-sdk/anthropic": "^1.2.12",
-		"@ai-sdk/cohere": "^1.2.10",
-		"@ai-sdk/google": "^1.2.19",
-		"@ai-sdk/mistral": "^1.2.8",
-		"@ai-sdk/openai": "^1.3.22",
-		"@mastra/core": "^0.10.6",
-		"@modelcontextprotocol/sdk": "^1.12.3",
-		"ai": "^4.3.16",
-		"axios": "^1.10.0",
-		"commander": "^14.0.0",
-		"crypto-js": "^4.2.0",
-		"diff": "^8.0.2",
-		"dotenv": "^16.5.0",
-		"eventsource": "^4.0.0",
-		"node-fetch": "^3.3.2",
-		"ollama-ai-provider": "^1.2.0",
-		"openai": "^5.6.0",
-		"uuid": "^11.1.0",
-		"zod": "^3.25.67"
+	"scripts": {
+		"build": "turbo run build",
+		"dev": "turbo run dev",
+		"clean": "turbo run clean",
+		"mcp": "pnpm --filter=@webgal-tools/mcp-server run serve",
+		"mcp:sse": "pnpm --filter=@webgal-tools/mcp-server run serve:sse",
+		"mcp:sse:port": "pnpm --filter=@webgal-tools/mcp-server run serve:sse:port",
+		"mcp:test": "pnpm --filter=@webgal-tools/mcp-server run test",
+		"mcp:test:sse": "pnpm --filter=@webgal-tools/mcp-server run test:sse",
+		"voice": "pnpm --filter=@webgal-tools/voice run serve",
+		"voice:test": "pnpm --filter=@webgal-tools/voice run test",
+		"publish:check": "node scripts/publish.js check",
+		"publish:version": "node scripts/publish.js version",
+		"publish:build": "node scripts/publish.js build",
+		"publish:all": "node scripts/publish.js publish",
+		"publish:beta": "node scripts/publish.js publish",
+		"release": "pnpm run publish:build && pnpm run publish:all"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.29.0",
-		"@jest/globals": "^30.0.2",
 		"@modelcontextprotocol/inspector": "^0.14.3",
-		"@types/jest": "^30.0.0",
+		"@types/express": "^4.17.17",
 		"@types/node": "^22.0.0",
 		"@typescript-eslint/eslint-plugin": "^8.35.0",
 		"@typescript-eslint/parser": "^8.35.0",
 		"eslint": "^9.29.0",
-		"jest": "^30.0.2",
 		"pkg": "^5.8.1",
-		"ts-jest": "^29.4.0",
+		"rimraf": "^6.0.1",
 		"ts-node": "^10.9.2",
+		"turbo": "^2.5.4",
 		"typescript": "^5.6.0"
 	}
 }

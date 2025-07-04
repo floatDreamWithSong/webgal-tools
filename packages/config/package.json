@@ -1,0 +1,37 @@
+{
+  "name": "@webgal-tools/config",
+  "version": "1.0.0",
+  "description": "统一的配置文件加载和管理",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "example/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/webgal-mcp.git",
+    "directory": "packages/config"
+  },
+  "keywords": [
+    "webgal",
+    "mcp",
+    "config",
+    "configuration"
+  ],
+  "scripts": {
+    "build": "tsc && pnpm run copy-resources",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "copy-resources": "xcopy /E /I /Y example dist\\example"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+} 

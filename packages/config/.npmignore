@@ -1,0 +1,25 @@
+# 源代码
+src/
+*.ts
+*.tsx
+
+# 开发文件
+tsconfig.json
+.eslintrc*
+.prettierrc*
+
+# 测试文件
+test/
+tests/
+*.test.*
+*.spec.*
+
+# 开发工具
+.vscode/
+.idea/
+*.log
+
+# 临时文件
+node_modules/
+.turbo/
+dist/ 
