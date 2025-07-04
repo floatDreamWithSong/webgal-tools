@@ -1,18 +1,22 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { getEnvConfig } from '@webgal-mcp/config';
+import { getMcpConfig } from '@webgal-mcp/config';
 import { AssetType, SUPPORTED_EXTENSIONS, ScanDetails } from './asset-types.js';
 
-// 获取环境变量配置的目录列表
+// 获取配置的目录列表
 export function getAssetDirectories(assetType: string): string[] {
-  const envKey = `WEBGAL_${assetType.toUpperCase()}_DIR`;
-  const envValue = process.env[envKey];
-
-  if (envValue) {
-    // 支持空格分隔的多个目录
-    return envValue.split(' ')
-      .map(dir => dir.trim())
-      .filter(dir => dir.length > 0);
+  try {
+    const mcpConfig = getMcpConfig();
+    const configValue = mcpConfig.directories[assetType as keyof typeof mcpConfig.directories];
+    
+    if (configValue) {
+      // 支持空格分隔的多个目录
+      return configValue.split(' ')
+        .map(dir => dir.trim())
+        .filter(dir => dir.length > 0);
+    }
+  } catch (error) {
+    console.error(`获取${assetType}目录配置失败，使用默认值:`, error);
   }
 
   // 默认目录
@@ -33,7 +37,7 @@ export async function scanDirectory(dirPath: string, extensions: string[], shall
       if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
         if (extensions.includes(ext)) {
-          const workDir = getEnvConfig().WEBGAL_WORK_DIR!;
+          const workDir = process.cwd(); // 使用当前工作目录
           const relativePath = path.relative(workDir, fullPath);
           files.push(relativePath.replace(/\\/g, '/'));
         }
@@ -56,7 +60,7 @@ export async function scanStandardAssets(assetType: AssetType): Promise<{assets:
   const extensions = SUPPORTED_EXTENSIONS[assetType] || [];
   const allFiles: string[] = [];
 
-  const workDir = getEnvConfig().WEBGAL_WORK_DIR!;
+  const workDir = process.cwd(); // 使用当前工作目录
   for (const assetDir of assetDirs) {
     const fullDir = path.join(workDir, assetDir);
     const files = await scanDirectory(fullDir, extensions);

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { getEnvConfig, getVoiceConfig } from '@webgal-mcp/config';
+import { getVoiceConfig } from '@webgal-mcp/config';
 import { VoiceGenerationConfig, LANGUAGE_OPTIONS } from './request.js';
 
 export interface CharacterVoiceConfig {
@@ -40,7 +40,7 @@ export class VoiceConfigManager {
   private configPath: string;
 
   constructor(workDirectory?: string) {
-    const workDir = workDirectory || getEnvConfig().WEBGAL_WORK_DIR!;
+    const workDir = workDirectory || process.cwd(); // 使用当前工作目录
     this.configPath = path.join(workDir, 'voice.config.json');
   }
 

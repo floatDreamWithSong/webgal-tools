@@ -4,7 +4,7 @@ import { createHash } from 'crypto';
 import { DialogueChunk, WebGALScriptCompiler } from './compiler.js';
 import { checkTranslatorService, setCharacterStyle } from './translate/index.js';
 import { GPTSoVITSAPI } from './request.js';
-import { getEnvConfig } from '@webgal-mcp/config';
+// 移除getEnvConfig依赖，使用当前工作目录
 import { VoiceConfigManager, CharacterVoiceConfig } from './config.js';
 import { BackupManager } from './backup.js';
 import { ContextExtractor } from './context.js';
@@ -29,7 +29,7 @@ export class VoiceGenerator {
   private backupManager: BackupManager;
 
   constructor() {
-    const workDir = getEnvConfig().WEBGAL_WORK_DIR!;
+    const workDir = process.cwd(); // 使用当前工作目录
     this.configManager = new VoiceConfigManager(workDir);
     this.backupManager = new BackupManager(workDir);
     this.api = new GPTSoVITSAPI(
@@ -261,7 +261,7 @@ export class VoiceGenerator {
    * @param forceMode 强制模式，清理现有音频文件并重新生成所有语音
    */
   async generateVoice(fileName: string, forceMode: boolean = false): Promise<void> {
-    const workDir = getEnvConfig().WEBGAL_WORK_DIR!;
+    const workDir = process.cwd(); // 使用当前工作目录
     const filePath = path.resolve(workDir,'scene', fileName);
     
     if (!fs.existsSync(filePath)) {

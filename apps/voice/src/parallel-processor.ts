@@ -3,6 +3,7 @@ import { VoiceTask } from './generator.js';
 import { TranslateConfig, CharacterVoiceConfig } from './config.js';
 import { GPTSoVITSAPI } from './request.js';
 import { TranslateService } from './translate/index.js';
+import { getMaxTranslator } from '@webgal-mcp/config';
 import { logger } from '@webgal-mcp/logger';
 
 interface TranslateTask {
@@ -62,8 +63,8 @@ export class ParallelProcessor {
     this.api = api;
     this.audioOutputDir = audioOutputDir;
     this.translateService = new TranslateService();
-    // 从环境变量获取最大并发数，默认为3
-    this.maxConcurrency = parseInt(process.env.MAX_TRANSLATOR || '3');
+    // 从配置获取最大并发数
+    this.maxConcurrency = getMaxTranslator();
     logger.info(`🔧 最大并发数: ${this.maxConcurrency}`);
   }
 

@@ -37,41 +37,49 @@
 首先，请打开一个终端或命令行工具（如 PowerShell 或 Cmd），然后执行以下命令：
 
 ```bash
-npx openwebgal-mcp-server init -webgal <你的游戏目录>
+# 初始化MCP服务器配置（文档服务）
+npx openwebgal-mcp-server -webgal <你的游戏目录> init
+
+# 初始化语音合成配置
+npx openwebgal-voice -webgal <你的游戏目录> init
 ```
 
+**重要变更说明**：
+- 🎉 **全面JSON化**：我们已完全废弃 `.env` 环境变量方式，改用更清晰直观的JSON配置文件
+- 📦 **功能分离**：MCP文档服务和语音合成现在是两个独立的工具，各司其职
+- 🔧 **配置简化**：每个工具只需要自己的配置文件，避免配置混乱
 
 **命令解释**：
 - `npx`：一个方便的工具，可以临时下载并运行这个 AI 助手程序，无需在您的电脑上永久安装。
 - `init`: 表示要执行"初始化"操作。
 - `-webgal <你的游戏目录>`: 这是最重要的参数，您需要将 `<你的游戏目录>` 替换成您本地 WebGAL 游戏的根目录路径。例如：`D:/Webgal_Terre/public/games/新的游戏/game`。
 
-执行该命令后，程序会在您 **当前所在的目录** 下创建两个核心配置文件：
+执行这些命令后，程序会在您 **当前所在的目录** 下创建对应的配置文件：
 
-1.  `.env`: 用于配置基础环境，主要是游戏资源目录。
-2.  `voice.config.json`: 用于配置所有与 **翻译** 和 **语音合成** 相关的功能。
+1.  `mcp.config.json`: MCP服务器的资产目录配置，清晰直观
+2.  `voice.config.json`: 语音合成和翻译的详细配置（包含翻译并发数等设置）
 
 ### 配置项详解
 
-#### 基础配置 (`.env` 文件)
+#### MCP配置 (`mcp.config.json` 文件)
 
 这个文件告诉 AI 助手去哪里寻找您的游戏资源。通常您不需要修改它，使用默认配置即可。
 
+```json
+{
+  "directories": {
+    "background": "background",
+    "vocal": "vocal", 
+    "bgm": "bgm",
+    "animation": "animation",
+    "video": "video",
+    "figure": "figure"
+  }
+}
 ```
-# 资源扫描的目录（相对于您的游戏目录）
-WEBGAL_BACKGROUND_DIR=background
-WEBGAL_VOCAL_DIR=vocal
-WEBGAL_BGM_DIR=bgm
-WEBGAL_ANIMATION_DIR=animation
-WEBGAL_VIDEO_DIR=video
-WEBGAL_FIGURE_DIR=figure
 
-# 最大翻译任务并发数
-MAX_TRANSLATOR=3
-```
-
-- `WEBGAL_..._DIR`: 指定了不同类型资源（背景、语音、音乐等）所在的文件夹名称。
-- `MAX_TRANSLATOR`: 在执行翻译和语音合成时，可以同时进行多少个翻译任务。提高此数值可以加快多角色、多语言翻译的速度，但也会增加电脑性能消耗。对于大型语言模型API服务（如OpenAI、Anthropic等），较高的并发数可以显著提升效率；但如果使用的是本地部署的Ollama服务，过高的并发可能会导致性能下降，因为本地模型的推理能力有限，建议根据您的硬件配置调整此值。
+- `directories`: 指定了不同类型资源（背景、语音、音乐等）所在的文件夹名称，相对于您的游戏目录。
+- JSON格式让配置一目了然，易于编辑和版本控制。
 
 #### 语音与翻译配置 (`voice.config.json` 文件)
 
@@ -84,6 +92,7 @@ MAX_TRANSLATOR=3
   "gpt_sovits_url": "http://localhost:9872",
   "gpt_sovits_path": "D:\\AIVoice\\GPT-SoVITS-v2pro-20250604",
   "model_version": "v2",
+  "max_translator": 3,
   "translate": {
     "model_type": "ollama",
     "base_url": "http://localhost:11434/api",
@@ -144,6 +153,7 @@ MAX_TRANSLATOR=3
   "gpt_sovits_url": "http://localhost:9872",
   "gpt_sovits_path": "D:\\AIVoice\\GPT-SoVITS-v2pro-20250604",
   "model_version": "v2",
+  "max_translator": 3,
   "translate": {
     "model_type": "openai",
     "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
@@ -209,6 +219,7 @@ MAX_TRANSLATOR=3
     *   `gpt_sovits_path`: 您本地 GPT-SoVITS 项目的完整路径。**模型文件路径将基于此路径计算**。
     *   `volume`: 生成语音的默认音量。
     *   `model_version`: GPT-SoVITS 使用的模型版本，一般就 (`v2`)。
+    *   `max_translator`: 翻译任务的最大并发数。提高此数值可以加快多角色、多语言翻译的速度，但也会增加性能消耗。对于API服务建议3-5，本地模型建议1-2。
 
 *   **翻译配置 (`translate` 部分)**:
     *   `enabled`: 是否启用翻译功能。如果为 `true`，则会在语音合成前先进行翻译。
@@ -247,12 +258,18 @@ webgal-mcp/
 │   └── voice/               # 语音合成应用
 │       └── src/             # 语音合成源代码
 ├── packages/
-│   ├── config/              # 统一配置管理
-│   │   ├── src/             # 配置源代码
+│   ├── config/              # 统一配置管理包
+│   │   ├── src/             # 配置加载和初始化
 │   │   └── example/         # 配置示例文件
-│   └── logger/              # 统一日志服务
-│       └── src/             # 日志源代码
-└── turbo.json              # Turborepo配置
+│   └── logger/              # 统一日志记录包
+```
+
+**架构优势:**
+
+- **🎯 单一职责**: 每个包专注于特定功能，config包负责所有配置相关操作
+- **🛡️ 封装隔离**: 应用层通过config包的API操作配置，不直接访问文件系统
+- **🔧 易于维护**: 项目结构变动时，只需修改对应包的实现
+- **📦 模块化**: 清晰的依赖关系和接口定义
 ```
 
 ## 🚀 运行模式
@@ -270,88 +287,63 @@ pnpm dev
 pnpm clean
 ```
 
-### 运行MCP服务器
+### 独立CLI工具
 
-本项目支持两种运行模式：
+本项目提供了两个独立的CLI工具：
 
-#### 1. stdio模式（默认）
-传统的标准输入输出模式，适合本地开发和测试：
+#### 1. WebGAL MCP服务器 (`webgal-mcp-server`)
+
+MCP服务器专注于提供文档查询和资源管理功能：
 
 ```bash
+# 初始化.env配置文件
+webgal-mcp-server -webgal ./game init
+
 # 启动stdio模式
-pnpm serve -webgal /path/to/your/game
+webgal-mcp-server -webgal ./game
 
-# 或直接使用构建输出
-node apps/mcp-server/dist/main.js -webgal /path/to/your/game
-```
-
-#### 2. SSE模式（Server-Sent Events）
-基于HTTP的服务器模式，支持远程连接和多客户端并发：
-
-```bash
-# 启动SSE服务器，默认端口3000
-pnpm serve:sse -webgal /path/to/your/game
+# 启动SSE服务器，默认端口3333  
+webgal-mcp-server -webgal ./game --sse
 
 # 使用自定义端口
-pnpm serve:sse:port -webgal /path/to/your/game
-
-# 或直接使用构建输出
-node apps/mcp-server/dist/main.js -webgal /path/to/your/game --sse --port 3000
+webgal-mcp-server -webgal ./game --sse --port 3001
 ```
 
-SSE模式启动后会提供以下端点：
-- `GET /connect` - 建立SSE连接
-- `POST /messages` - 处理MCP消息
-- `GET /health` - 健康检查
+#### 2. WebGAL 语音合成工具 (`webgal-voice`)
 
-**SSE模式优势：**
-- 支持远程连接
-- 支持多个并发客户端
-- 基于HTTP协议，更适合Web应用集成
-- 提供健康检查和监控功能
+语音工具专注于为脚本生成配音：
 
-**使用SSE客户端连接：**
-```javascript
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-
-const client = new Client({
-  name: "webgal-client",
-  version: "1.0.0"
-}, {
-  capabilities: {}
-});
-
-const transport = new SSEClientTransport(
-  new URL("http://localhost:3000/connect")
-);
-
-await client.connect(transport);
-```
-
-**健康检查：**
 ```bash
-curl http://localhost:3000/health
+# 初始化voice.config.json配置文件
+webgal-voice -webgal ./game init
+
+# 为脚本生成语音
+webgal-voice -webgal ./game -voice scene1.txt
+
+# 强制重新生成所有语音
+webgal-voice -webgal ./game -voice scene1.txt -force
 ```
 
-响应示例：
-```json
-{
-  "status": "ok",
-  "activeConnections": 2,
-  "timestamp": "2024-01-01T12:00:00.000Z"
-}
+#### MCP服务器模式说明
+
+**stdio模式（默认）:**
+- 标准输入输出模式，适合本地开发和测试
+- 适用于MCP客户端直接连接
+
+**SSE模式（Server-Sent Events）:**
+- 基于HTTP的服务器模式，支持远程连接
+- 默认端口3333，提供以下端点：
+  - `GET /connect` - 建立SSE连接
+  - `POST /messages` - 处理MCP消息  
+  - `GET /health` - 健康检查
+
+**健康检查示例：**
+```bash
+curl http://localhost:3333/health
+# 响应: {"status":"ok","activeConnections":0,"timestamp":"2024-01-01T12:00:00.000Z"}
 ```
 
-### 🔧 模式对比
 
-| 特性 | stdio模式 | SSE模式 |
-|------|-----------|---------|
-| 连接方式 | 本地进程通信 | HTTP连接 |
-| 并发支持 | 单个客户端 | 多个客户端 |
-| 远程访问 | 不支持 | 支持 |
-| 监控能力 | 有限 | 健康检查API |
-| 适用场景 | 本地开发/测试 | 生产环境/Web集成 |
 
 ### 📚 能力一：WebGAL 万事通
 
@@ -417,14 +409,17 @@ curl http://localhost:3000/health
 
 ### 使用方式
 
-在配置好 `voice.config.json` 后，打开终端，执行以下命令即可开始为指定剧本生成语音：
+在配置好 `voice.config.json` 后，使用独立的语音工具为指定剧本生成语音：
 
 ```bash
+# 初始化语音配置文件
+webgal-voice -webgal <你的游戏目录> init
+
 # 为 scene1.txt 生成语音
-npx openwebgal-mcp-server -voice scene1.txt -webgal <你的游戏目录>
+webgal-voice -webgal <你的游戏目录> -voice scene1.txt
 
 # 强制模式：忽略缓存，为所有对话重新生成语音
-npx openwebgal-mcp-server -voice scene1.txt -force -webgal <你的游戏目录>
+webgal-voice -webgal <你的游戏目录> -voice scene1.txt -force
 ```
 
 ## 5. 翻译模型接入

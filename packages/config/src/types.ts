@@ -1,67 +1,72 @@
-import { z } from 'zod';
+// WebGAL MCP配置类型定义
+// 只支持JSON配置格式，废弃环境变量方式
 
-// 环境配置Schema
-export const EnvConfigSchema = z.object({
-  WEBGAL_WORK_DIR: z.string().optional(),
-  WEBGAL_BACKGROUND_DIR: z.string().default('background'),
-  WEBGAL_VOCAL_DIR: z.string().default('vocal'),
-  WEBGAL_BGM_DIR: z.string().default('bgm'),
-  WEBGAL_ANIMATION_DIR: z.string().default('animation'),
-  WEBGAL_VIDEO_DIR: z.string().default('video'),
-  WEBGAL_FIGURE_DIR: z.string().default('figure'),
-  MAX_TRANSLATOR: z.string().transform(val => parseInt(val, 10)).default('3'),
-});
+/**
+ * MCP配置JSON格式
+ */
+export interface McpConfig {
+  directories: {
+    background: string;
+    vocal: string;
+    bgm: string;
+    animation: string;
+    video: string;
+    figure: string;
+  };
+}
 
-// 翻译配置Schema
-export const TranslateConfigSchema = z.object({
-  model_type: z.enum(['ollama', 'openai', 'anthropic', 'google', 'mistral', 'cohere', 'custom']),
-  base_url: z.string(),
-  model_name: z.string(),
-  api_key: z.string().optional(),
-  enabled: z.boolean().default(true),
-  context_size: z.number().default(2),
-  additional_prompt: z.string().optional(),
-});
+/**
+ * 语音配置JSON格式
+ */
+export interface VoiceConfig {
+  volume: number;
+  gpt_sovits_url: string;
+  gpt_sovits_path: string;
+  model_version: string;
+  max_translator?: number; // 最大翻译并发数
+  translate?: TranslateConfig;
+  characters: CharacterConfig[];
+}
 
-// 角色推理配置Schema
-export const InferenceConfigSchema = z.object({
-  prompt_language: z.string().default('日文'),
-  text_language: z.string().default('日文'),
-  how_to_cut: z.string().default('凑四句一切'),
-  top_k: z.number().default(15),
-  top_p: z.number().default(1.0),
-  temperature: z.number().default(1.0),
-  speed: z.number().default(1.0),
-  sample_steps: z.number().default(8),
-  if_sr: z.boolean().default(false),
-  pause_second: z.number().default(0.3),
-});
+/**
+ * 翻译服务配置
+ */
+export interface TranslateConfig {
+  model_type: 'openai' | 'anthropic' | 'google' | 'mistral' | 'cohere' | 'ollama' | 'custom';
+  base_url: string;
+  api_key?: string;
+  model_name: string;
+  enabled: boolean;
+  context_size: number;
+  additional_prompt?: string;
+}
 
-// 角色配置Schema
-export const CharacterConfigSchema = z.object({
-  character_name: z.string(),
-  gpt: z.string(),
-  sovits: z.string(),
-  ref_audio: z.string(),
-  ref_text: z.string(),
-  prompt: z.string().optional(),
-  translate_to: z.string().default('日文'),
-  inferrence_config: InferenceConfigSchema.optional(),
-});
+/**
+ * 角色配置
+ */
+export interface CharacterConfig {
+  character_name: string;
+  gpt: string;
+  sovits: string;
+  ref_audio: string;
+  ref_text: string;
+  prompt?: string;
+  translate_to: string;
+  inferrence_config: InferrenceConfig;
+}
 
-// 语音配置Schema
-export const VoiceConfigSchema = z.object({
-  volume: z.number().default(30),
-  gpt_sovits_url: z.string(),
-  gpt_sovits_path: z.string(),
-  model_version: z.string().default('v2'),
-  translate: TranslateConfigSchema.optional(),
-  characters: z.array(CharacterConfigSchema).default([]),
-});
-
-// 导出类型
-export type EnvConfig = z.infer<typeof EnvConfigSchema>;
-export type TranslateConfig = z.infer<typeof TranslateConfigSchema>;
-export type InferenceConfig = z.infer<typeof InferenceConfigSchema>;
-export type CharacterConfig = z.infer<typeof CharacterConfigSchema>;
-export type VoiceConfig = z.infer<typeof VoiceConfigSchema>; 
+/**
+ * 语音推理配置
+ */
+export interface InferrenceConfig {
+  prompt_language: string;
+  text_language: string;
+  how_to_cut: string;
+  top_k: number;
+  top_p: number;
+  temperature: number;
+  speed: number;
+  sample_steps: number;
+  if_sr: boolean;
+  pause_second: number;
+} 

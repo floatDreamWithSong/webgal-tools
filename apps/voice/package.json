@@ -5,10 +5,15 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "webgal-voice": "dist/voice-cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "serve": "node dist/voice-cli.js",
+    "test": "node dist/voice-cli.js -webgal D:/file/WebGal/webgal-mcp/game -voice"
   },
   "dependencies": {
     "@webgal-mcp/config": "workspace:*",

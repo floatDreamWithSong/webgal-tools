@@ -1,16 +1,21 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { getEnvConfig } from '@webgal-mcp/config';
+import { getMcpConfig } from '@webgal-mcp/config';
 import { Live2DCharacterInfo } from './asset-types.js';
 
 // 获取figure目录
 function getFigureDirectories(): string[] {
-  const envValue = process.env.WEBGAL_FIGURE_DIR;
-  
-  if (envValue) {
-    return envValue.split(' ')
-      .map(dir => dir.trim())
-      .filter(dir => dir.length > 0);
+  try {
+    const mcpConfig = getMcpConfig();
+    const configValue = mcpConfig.directories.figure;
+    
+    if (configValue) {
+      return configValue.split(' ')
+        .map(dir => dir.trim())
+        .filter(dir => dir.length > 0);
+    }
+  } catch (error) {
+    console.error('获取figure目录配置失败，使用默认值:', error);
   }
   
   return ['figure'];
@@ -18,7 +23,7 @@ function getFigureDirectories(): string[] {
 
 // 扫描静态图片人物
 export async function scanStaticFigures(): Promise<string[]> {
-  const workDir = getEnvConfig().WEBGAL_WORK_DIR!;
+  const workDir = process.cwd(); // 使用当前工作目录
   const figureDirs = getFigureDirectories();
   const imageExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
   const staticFigures: string[] = [];
@@ -63,7 +68,7 @@ async function scanDirectoryForImages(
 
 // 扫描Live2D人物（只返回model.json路径）
 export async function scanLive2DFigures(): Promise<string[]> {
-  const workDir = getEnvConfig().WEBGAL_WORK_DIR!;
+  const workDir = process.cwd(); // 使用当前工作目录
   const figureDirs = getFigureDirectories();
   const live2dModels: string[] = [];
 
@@ -104,7 +109,7 @@ async function scanDirectoryForLive2DModels(
 
 // 获取指定Live2D模型的详细信息
 export async function getLive2DCharacterDetails(modelPaths: string[]): Promise<Live2DCharacterInfo[]> {
-  const workDir = getEnvConfig().WEBGAL_WORK_DIR!;
+  const workDir = process.cwd(); // 使用当前工作目录
   const figureDirs = getFigureDirectories();
   const characterDetails: Live2DCharacterInfo[] = [];
 

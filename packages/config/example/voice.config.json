@@ -1,8 +1,9 @@
 {
   "volume": 30,
-  "gpt_sovits_url": "http://localhost:9872",
+  "gpt_sovits_url": "http://localhost:9872", 
   "gpt_sovits_path": "D:\\AIVoice\\GPT-SoVITS-v2pro-20250604",
   "model_version": "v2",
+  "max_translator": 3,
   "translate": {
     "model_type": "ollama",
     "base_url": "http://localhost:11434/api",

@@ -1,6 +1,6 @@
 {
 	"name": "webgal-tools",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"description": "WebGAL 工具包",
 	"type": "module",
 	"private": true,
@@ -13,12 +13,8 @@
 		"build": "turbo run build",
 		"dev": "turbo run dev",
 		"clean": "turbo run clean",
-		"serve": "node apps/mcp-server/dist/main.js",
-		"serve:sse": "node apps/mcp-server/dist/main.js --sse",
-		"serve:sse:port": "node apps/mcp-server/dist/main.js --sse --port 3001",
-		"test": "pnpm dlx @modelcontextprotocol/inspector node apps/mcp-server/dist/main.js -webgal D:/file/WebGal/release/public/games/新的游戏/game",
-		"test:sse": "node apps/mcp-server/dist/main.js -webgal D:/file/WebGal/release/public/games/新的游戏/game --sse",
-		"test:voice": "node apps/mcp-server/dist/main.js -webgal D:/file/WebGal/release/public/games/新的游戏/game -voice "
+		"mcp": "pnpm --filter=@webgal-mcp/mcp-server",
+		"voice": "pnpm --filter=@webgal-mcp/voice"
 	},
 
 	"dependencies": {},
