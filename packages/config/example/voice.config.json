@@ -1,7 +1,7 @@
 {
   "volume": 30,
   "gpt_sovits_url": "http://localhost:9872",
-  "gpt_sovits_path": "D:\\AIVoice\\GPT-SoVITS-v2pro-20250604",
+  "gpt_sovits_path": "D:/AIVoice/GPT-SoVITS-v2pro-20250604",
   "model_version": "v2",
   "max_translator": 1,
   "translate": {
@@ -15,9 +15,9 @@
   "characters": [
     {
       "character_name": "丰川祥子",
-      "gpt": "GPT_weights_v2ProPlus\\Mujica_豊川祥子_黒_v2pp.ckpt",
-      "sovits": "SoVITS_weights_v2ProPlus\\Mujica_豊川祥子_黒_v2pp.pth",
-      "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\丰川祥子（黑祥）\\(A)今後は発言にプロとしての自覚をお持ちになって.wav",
+      "gpt": "GPT_weights_v2ProPlus/Mujica_豊川祥子_黒_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus/Mujica_豊川祥子_黒_v2pp.pth",
+      "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/丰川祥子（黑祥）/(A)今後は発言にプロとしての自覚をお持ちになって.wav",
       "ref_text": "今後は発言にプロとしての自覚をお持ちになって",
       "prompt": "【口吻】高傲威严的大小姐腔调，善用命令句式（〜なさい/〜ですわ），语速中等偏快，强调重音明显。日文自称'私（わたくし）'，他称'諸君'。代表句尾：'ですわ'、'かしら'",
       "translate_to": "日文",
@@ -35,9 +35,9 @@
       }
     },{
       "character_name": "Uika",
-      "gpt": "GPT_weights_v2ProPlus\\Mujica_三角初華_v2pp.ckpt",
-      "sovits": "SoVITS_weights_v2ProPlus\\Mujica_三角初華_v2pp.pth",
-      "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\三角初华\\(A)まなちゃんソロの仕事も始まって、大変なときなのに.wav",
+      "gpt": "GPT_weights_v2ProPlus/Mujica_三角初華_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus/Mujica_三角初華_v2pp.pth",
+      "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/三角初华/(A)まなちゃんソロの仕事も始まって、大変なときなのに.wav",
       "ref_text": "まなちゃんソロの仕事も始まって、大変なときなのに",
       "prompt": "【口吻】温柔治愈系关西腔，句尾多用'ね'、'よ'等语气词，称呼祥子必用'さきちゃん'。语速舒缓有节奏感，笑声清亮。代表句式：'大丈夫だよ〜'、'一緒に頑張ろうね'",
       "translate_to": "日文",
@@ -55,9 +55,9 @@
       }
     },{
       "character_name": "Mutsumi",
-      "gpt": "GPT_weights_v2ProPlus\\Mujica_若葉睦_v2pp.ckpt",
-      "sovits": "SoVITS_weights_v2ProPlus\\Mujica_若葉睦_v2pp.pth",
-      "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\若叶睦\\(A)そよたちのライブの日なら会えると思う.wav",
+      "gpt": "GPT_weights_v2ProPlus/Mujica_若葉睦_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus/Mujica_若葉睦_v2pp.pth",
+      "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/若叶睦/(A)そよたちのライブの日なら会えると思う.wav",
       "ref_text": "そよたちのライブの日なら会えると思う",
       "prompt": "【口吻】无感情波动的寡言系，多用短句（平均5-7词），句尾下降调。沉默时用'...'表示，称呼他人用'〜さん'。代表句式：'うん'、'そう思う'、'わからない'",
       "translate_to": "日文",
@@ -75,9 +75,9 @@
       }
     },{
       "character_name": "Nyamu",
-      "gpt": "GPT_weights_v2ProPlus\\Mujica_祐天寺若麥_乖猫_v2pp.ckpt",
-      "sovits": "SoVITS_weights_v2ProPlus\\Mujica_祐天寺若麥_乖猫_v2pp.pth",
-      "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\喵梦_乖猫\\(A)そんなおびえないでよ。あたし、ムーコと仲良くなりたいんだ.wav",
+      "gpt": "GPT_weights_v2ProPlus/Mujica_祐天寺若麥_乖猫_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus/Mujica_祐天寺若麥_乖猫_v2pp.pth",
+      "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/喵梦_乖猫/(A)そんなおびえないでよ。あたし、ムーコと仲良くなりたいんだ.wav",
       "ref_text": "そんなおびえないでよ。あたし、ムーコと仲良くなりたいんだ",
       "prompt": "【口吻】轻浮活泼的网络主播腔，句尾音调上扬快活。自称'にゃむ'，称呼他人用'〜ち'（例：むつち）。代表句式：'超ヤバいにゃ！'、'ファンサービスしよっか〜'",
       "translate_to": "日文",
@@ -95,9 +95,9 @@
       }
     },{
       "character_name": "Umiri",
-      "gpt": "GPT_weights_v2ProPlus\\Mujica_八幡海鈴_v2pp.ckpt",
-      "sovits": "SoVITS_weights_v2ProPlus\\Mujica_八幡海鈴_v2pp.pth",
-      "ref_audio": "D:\\AIVoice\\语音模型\\GPT-SoVITS v2 pro plus\\Mujica\\海铃\\(A)世界観という意味では、若葉さんが独自のアプローチでの表現に、成功しているのではないでしょうか.wav",
+      "gpt": "GPT_weights_v2ProPlus/Mujica_八幡海鈴_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus/Mujica_八幡海鈴_v2pp.pth",
+      "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/海铃/(A)世界観という意味では、若葉さんが独自のアプローチでの表現に、成功しているのではないでしょうか.wav",
       "ref_text": "世界観という意味では、若葉さんが独自のアプローチでの表現に、成功しているのではないでしょうか",
       "prompt": "【口吻】冷静理性的分析腔，多用推量形（〜でしょう/〜ではないでしょうか），语速平稳无起伏。称呼全名用'〜さん'，专业术语正确发音。代表句式：'つまり'、'したがって'、'客観的に言って'",
       "translate_to": "日文",
