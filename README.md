@@ -232,6 +232,89 @@ MAX_TRANSLATOR=3
 
 配置完成后，AI 助手就具备了多种能力。您可以通过兼容 MCP 协议的客户端（如配置好的聊天机器人）来使用这些能力。
 
+### 🚀 运行模式
+
+本项目支持两种运行模式：
+
+#### 1. stdio模式（默认）
+传统的标准输入输出模式，适合本地开发和测试：
+
+```bash
+# 启动stdio模式
+npx openwebgal-mcp-server -webgal /path/to/your/game
+
+# 或使用已构建的版本
+node dist/main.js -webgal /path/to/your/game
+```
+
+#### 2. SSE模式（Server-Sent Events）
+基于HTTP的服务器模式，支持远程连接和多客户端并发：
+
+```bash
+# 启动SSE服务器，默认端口3000
+npx openwebgal-mcp-server -webgal /path/to/your/game --sse
+
+# 使用自定义端口
+npx openwebgal-mcp-server -webgal /path/to/your/game --sse --port 8080
+
+# 或使用已构建的版本
+node dist/main.js -webgal /path/to/your/game --sse --port 3000
+```
+
+SSE模式启动后会提供以下端点：
+- `GET /connect` - 建立SSE连接
+- `POST /messages` - 处理MCP消息
+- `GET /health` - 健康检查
+
+**SSE模式优势：**
+- 支持远程连接
+- 支持多个并发客户端
+- 基于HTTP协议，更适合Web应用集成
+- 提供健康检查和监控功能
+
+**使用SSE客户端连接：**
+```javascript
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+
+const client = new Client({
+  name: "webgal-client",
+  version: "1.0.0"
+}, {
+  capabilities: {}
+});
+
+const transport = new SSEClientTransport(
+  new URL("http://localhost:3000/connect")
+);
+
+await client.connect(transport);
+```
+
+**健康检查：**
+```bash
+curl http://localhost:3000/health
+```
+
+响应示例：
+```json
+{
+  "status": "ok",
+  "activeConnections": 2,
+  "timestamp": "2024-01-01T12:00:00.000Z"
+}
+```
+
+### 🔧 模式对比
+
+| 特性 | stdio模式 | SSE模式 |
+|------|-----------|---------|
+| 连接方式 | 本地进程通信 | HTTP连接 |
+| 并发支持 | 单个客户端 | 多个客户端 |
+| 远程访问 | 不支持 | 支持 |
+| 监控能力 | 有限 | 健康检查API |
+| 适用场景 | 本地开发/测试 | 生产环境/Web集成 |
+
 ### 📚 能力一：WebGAL 万事通
 
 遇到 WebGAL 的问题却不想翻阅长篇的文档？直接问 AI 吧！AI 熟读了所有 WebGAL 的官方文档，能为您快速、准确地解答问题。
