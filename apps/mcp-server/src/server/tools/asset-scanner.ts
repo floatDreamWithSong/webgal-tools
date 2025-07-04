@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { getMcpConfig } from '@webgal-mcp/config';
 import { AssetType, SUPPORTED_EXTENSIONS, ScanDetails } from './asset-types.js';
+import { getWorkDir } from '../index.js';
 
 // 获取配置的目录列表
 export function getAssetDirectories(assetType: string): string[] {
@@ -37,7 +38,7 @@ export async function scanDirectory(dirPath: string, extensions: string[], shall
       if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
         if (extensions.includes(ext)) {
-          const workDir = process.cwd(); // 使用当前工作目录
+          const workDir = getWorkDir(); // 使用全局工作目录
           const relativePath = path.relative(workDir, fullPath);
           files.push(relativePath.replace(/\\/g, '/'));
         }
@@ -60,7 +61,7 @@ export async function scanStandardAssets(assetType: AssetType): Promise<{assets:
   const extensions = SUPPORTED_EXTENSIONS[assetType] || [];
   const allFiles: string[] = [];
 
-  const workDir = process.cwd(); // 使用当前工作目录
+  const workDir = getWorkDir(); // 使用全局工作目录
   for (const assetDir of assetDirs) {
     const fullDir = path.join(workDir, assetDir);
     const files = await scanDirectory(fullDir, extensions);

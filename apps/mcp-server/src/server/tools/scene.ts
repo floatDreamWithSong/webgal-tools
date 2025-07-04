@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { getWorkDir } from '../index.js';
 
 // 场景工具的Schema定义
 export const sceneToolsSchema = [
@@ -54,7 +55,7 @@ export const sceneToolsSchema = [
 // 扫描场景脚本
 export async function scanSceneScript() {
   try {
-    const workDir = process.cwd(); // 使用当前工作目录
+    const workDir = getWorkDir(); // 使用全局工作目录
     const sceneDir = path.join(workDir, 'scene');
     const scriptFiles: string[] = [];
 
@@ -130,7 +131,7 @@ export async function readSceneScript(args: any) {
       };
     }
 
-    const workDir = process.cwd(); // 使用当前工作目录
+    const workDir = getWorkDir(); // 使用全局工作目录
     const sceneDir = path.join(workDir, 'scene');
     const fullPath = path.join(sceneDir, fileName);
     
@@ -214,7 +215,7 @@ export async function writeSceneScript(args: any) {
       };
     }
 
-    const workDir = process.cwd(); // 使用当前工作目录
+    const workDir = getWorkDir(); // 使用全局工作目录
     const sceneDir = path.join(workDir, 'scene');
     const fullPath = path.join(sceneDir, fileName);
     

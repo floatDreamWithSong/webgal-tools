@@ -1,3 +1,4 @@
+import path from 'path';
 import { initializeConfig, checkConfigFiles } from './init.js';
 
 export interface CLIOptions {
@@ -14,8 +15,8 @@ export function printUsage(): void {
   init [选项]
 
 选项:
-  --force       强制覆盖已存在的配置文件
-  --quiet       静默模式，减少输出信息
+  -force       强制覆盖已存在的配置文件
+  -quiet       静默模式，减少输出信息
   -h, --help    显示此帮助信息
 
 示例:
@@ -23,10 +24,10 @@ export function printUsage(): void {
   init
   
   # 强制覆盖现有配置文件
-  init --force
+  init -force
   
   # 静默模式初始化
-  init --quiet
+  init -quiet
 `);
 }
 
@@ -53,8 +54,10 @@ export function checkAndReportConfigStatus(workDir: string): boolean {
  * 运行配置初始化CLI
  */
 export function runConfigInitCLI(options: CLIOptions): number {
-  const { workDir, force = false, quiet = false } = options;
-  
+  let { workDir, force = false, quiet = false } = options;
+  if(!path.isAbsolute(workDir)){
+    workDir = path.resolve(process.cwd(), workDir);
+  }
   if (!quiet) {
     console.error('🚀 开始初始化 WebGAL 项目配置...\n');
   }
@@ -63,7 +66,7 @@ export function runConfigInitCLI(options: CLIOptions): number {
   if (!force && !quiet) {
     const allExists = checkAndReportConfigStatus(workDir);
     if (allExists) {
-      console.error('\n💡 提示：所有配置文件已存在。如需重新初始化，请使用 --force 参数。');
+      console.error('\n💡 提示：所有配置文件已存在。如需重新初始化，请使用 -force 参数。');
       return 0;
     }
     console.error('\n继续初始化缺失的配置文件...\n');
@@ -99,9 +102,9 @@ export function runConfigInitCLI(options: CLIOptions): number {
     if (initResult.success) {
       console.error('🎉 项目初始化完成！你现在可以编辑配置文件并开始使用 WebGAL MCP 服务器。');
       if (force) {
-        console.error('💡 提示：使用了 --force 参数，已覆盖现有配置文件。');
+        console.error('💡 提示：使用了 -force 参数，已覆盖现有配置文件。');
       } else {
-        console.error('💡 提示：如需覆盖现有配置文件，请使用 --force 参数。');
+        console.error('💡 提示：如需覆盖现有配置文件，请使用 -force 参数。');
       }
     } else {
       console.error('⚠️  项目初始化过程中遇到了一些问题，请检查上述错误信息。');

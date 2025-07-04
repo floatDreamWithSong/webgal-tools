@@ -27,16 +27,17 @@ export class VoiceGenerator {
   private audioOutputDir: string;
   private configManager: VoiceConfigManager;
   private backupManager: BackupManager;
+  private workDir: string;
 
-  constructor() {
-    const workDir = process.cwd(); // 使用当前工作目录
-    this.configManager = new VoiceConfigManager(workDir);
-    this.backupManager = new BackupManager(workDir);
+  constructor(workDir: string) {
+    this.workDir = workDir; // 使用传入的工作目录，如果没有则使用当前工作目录
+    this.configManager = new VoiceConfigManager(this.workDir);
+    this.backupManager = new BackupManager(this.workDir);
     this.api = new GPTSoVITSAPI(
       this.configManager.getGptSovitsUrl(), 
       this.configManager.getModelVersion()
     );
-    this.audioOutputDir = path.join(workDir,'vocal');
+    this.audioOutputDir = path.join(this.workDir,'vocal');
     this.ensureAudioDir();
     this.initializeCharacterStyles();
   }
@@ -261,8 +262,7 @@ export class VoiceGenerator {
    * @param forceMode 强制模式，清理现有音频文件并重新生成所有语音
    */
   async generateVoice(fileName: string, forceMode: boolean = false): Promise<void> {
-    const workDir = process.cwd(); // 使用当前工作目录
-    const filePath = path.resolve(workDir,'scene', fileName);
+    const filePath = path.resolve(this.workDir,'scene', fileName);
     
     if (!fs.existsSync(filePath)) {
       throw new Error(`脚本文件不存在: ${filePath}`);

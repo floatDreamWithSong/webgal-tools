@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { EventSource } from 'eventsource';
 import fs from 'fs';
 import path from 'path';
@@ -496,7 +495,8 @@ class GPTSoVITSAPI {
       throw new Error(`Failed to download audio: ${response.status}`);
     }
 
-    const buffer = await response.buffer();
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     fs.writeFileSync(outputPath, buffer);
     console.log(`Audio saved to: ${outputPath}`);
   }

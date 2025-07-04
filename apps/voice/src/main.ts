@@ -29,8 +29,8 @@ async function main() {
   webgal-voice -webgal <工作目录> init [选项]
 
 选项:
-  --force       强制覆盖已存在的配置文件
-  --quiet       静默模式，减少输出信息
+  -force       强制覆盖已存在的配置文件
+  -quiet       静默模式，减少输出信息
   -h, --help    显示此帮助信息
 
 示例:
@@ -38,16 +38,16 @@ async function main() {
   webgal-voice -webgal ./game init
   
   # 强制覆盖现有配置文件
-  webgal-voice -webgal ./game init --force
+  webgal-voice -webgal ./game init -force
   
   # 静默模式初始化
-  webgal-voice -webgal ./game init --quiet
+  webgal-voice -webgal ./game init -quiet
 `);
       process.exit(0);
     }
     
-    const forceMode = process.argv.includes('--force');
-    const quietMode = process.argv.includes('--quiet');
+    const forceMode = process.argv.includes('-force');
+    const quietMode = process.argv.includes('-quiet');
     
     if (!quietMode) {
       console.error('🚀 开始初始化 WebGAL 语音合成配置...');
@@ -125,7 +125,7 @@ async function main() {
       logger.info('⚡ 强制模式已启用');
     }
     
-    const generator = new VoiceGenerator();
+    const generator = new VoiceGenerator(workDir);
     try {
       await generator.generateVoice(inputScript, forceMode);
       logger.info('语音生成完成！');

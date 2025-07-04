@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { getMcpConfig } from '@webgal-mcp/config';
 import { Live2DCharacterInfo } from './asset-types.js';
+import { getWorkDir } from '../index.js';
 
 // 获取figure目录
 function getFigureDirectories(): string[] {
@@ -23,7 +24,7 @@ function getFigureDirectories(): string[] {
 
 // 扫描静态图片人物
 export async function scanStaticFigures(): Promise<string[]> {
-  const workDir = process.cwd(); // 使用当前工作目录
+  const workDir = getWorkDir(); // 使用全局工作目录
   const figureDirs = getFigureDirectories();
   const imageExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
   const staticFigures: string[] = [];
@@ -68,7 +69,7 @@ async function scanDirectoryForImages(
 
 // 扫描Live2D人物（只返回model.json路径）
 export async function scanLive2DFigures(): Promise<string[]> {
-  const workDir = process.cwd(); // 使用当前工作目录
+  const workDir = getWorkDir(); // 使用全局工作目录
   const figureDirs = getFigureDirectories();
   const live2dModels: string[] = [];
 
@@ -109,7 +110,7 @@ async function scanDirectoryForLive2DModels(
 
 // 获取指定Live2D模型的详细信息
 export async function getLive2DCharacterDetails(modelPaths: string[]): Promise<Live2DCharacterInfo[]> {
-  const workDir = process.cwd(); // 使用当前工作目录
+  const workDir = getWorkDir(); // 使用全局工作目录
   const figureDirs = getFigureDirectories();
   const characterDetails: Live2DCharacterInfo[] = [];
 

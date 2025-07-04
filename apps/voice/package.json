@@ -3,17 +3,16 @@
   "version": "1.0.0",
   "description": "WebGAL GPT-SoVITS语音合成应用",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/main.js",
   "bin": {
-    "webgal-voice": "dist/voice-cli.js"
+    "webgal-voice": "dist/main.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
-    "serve": "node dist/voice-cli.js",
-    "test": "node dist/voice-cli.js -webgal D:/file/WebGal/webgal-mcp/game -voice"
+    "clean": "rimraf dist",
+    "serve": "node dist/main.js",
+    "test": "node dist/main.js -webgal D:/file/WebGal/webgal-mcp/game -voice"
   },
   "dependencies": {
     "@webgal-mcp/config": "workspace:*",
@@ -29,7 +28,6 @@
     "crypto-js": "^4.2.0",
     "diff": "^8.0.2",
     "eventsource": "^4.0.0",
-    "node-fetch": "^3.3.2",
     "ollama-ai-provider": "^1.2.0",
     "openai": "^5.6.0",
     "uuid": "^11.1.0"

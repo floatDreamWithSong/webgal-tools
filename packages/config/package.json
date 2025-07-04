@@ -6,9 +6,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && pnpm run copy-resources",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rimraf dist",
+    "copy-resources": "xcopy /E /I /Y example dist\\example"
   },
   "dependencies": {},
   "devDependencies": {

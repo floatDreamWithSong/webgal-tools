@@ -4,19 +4,19 @@
   "description": "WebGAL MCP服务器应用",
   "type": "module",
   "main": "dist/main.js",
-  "types": "dist/main.d.ts",
   "bin": {
-    "webgal-mcp-server": "dist/mcp-cli.js"
+    "webgal-mcp-server": "dist/main.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && pnpm run copy-resources",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
-    "serve": "node dist/mcp-cli.js",
-    "serve:sse": "node dist/mcp-cli.js --sse",
-    "serve:sse:port": "node dist/mcp-cli.js --sse --port 3001",
-    "test": "pnpm dlx @modelcontextprotocol/inspector node dist/mcp-cli.js -webgal D:/file/WebGal/webgal-mcp/game",
-    "test:sse": "node dist/mcp-cli.js -webgal D:/file/WebGal/webgal-mcp/game --sse"
+    "clean": "rimraf dist",
+    "copy-resources": "xcopy /E /I /Y resource dist\\resource",
+    "serve": "node dist/main.js",
+    "serve:sse": "node dist/main.js --sse",
+    "serve:sse:port": "node dist/main.js --sse --port 3001",
+    "test": "pnpm dlx @modelcontextprotocol/inspector node dist/main.js -webgal D:/file/WebGal/webgal-mcp/game",
+    "test:sse": "node dist/main.js -webgal D:/file/WebGal/webgal-mcp/game --sse"
   },
   "dependencies": {
     "@webgal-mcp/config": "workspace:*",

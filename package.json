@@ -13,11 +13,14 @@
 		"build": "turbo run build",
 		"dev": "turbo run dev",
 		"clean": "turbo run clean",
-		"mcp": "pnpm --filter=@webgal-mcp/mcp-server",
-		"voice": "pnpm --filter=@webgal-mcp/voice"
+		"mcp": "pnpm --filter=@webgal-mcp/mcp-server run serve",
+		"mcp:sse": "pnpm --filter=@webgal-mcp/mcp-server run serve:sse",
+		"mcp:sse:port": "pnpm --filter=@webgal-mcp/mcp-server run serve:sse:port",
+		"mcp:test": "pnpm --filter=@webgal-mcp/mcp-server run test",
+		"mcp:test:sse": "pnpm --filter=@webgal-mcp/mcp-server run test:sse",
+		"voice": "pnpm --filter=@webgal-mcp/voice run serve",
+		"voice:test": "pnpm --filter=@webgal-mcp/voice run test"
 	},
-
-	"dependencies": {},
 	"devDependencies": {
 		"@eslint/js": "^9.29.0",
 		"@modelcontextprotocol/inspector": "^0.14.3",
@@ -27,6 +30,7 @@
 		"@typescript-eslint/parser": "^8.35.0",
 		"eslint": "^9.29.0",
 		"pkg": "^5.8.1",
+		"rimraf": "^6.0.1",
 		"ts-node": "^10.9.2",
 		"turbo": "^2.5.4",
 		"typescript": "^5.6.0"

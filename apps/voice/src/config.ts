@@ -39,8 +39,8 @@ export class VoiceConfigManager {
   private config: VoiceConfig | null = null;
   private configPath: string;
 
-  constructor(workDirectory?: string) {
-    const workDir = workDirectory || process.cwd(); // 使用当前工作目录
+  constructor(workDirectory: string) {
+    const workDir = workDirectory;
     this.configPath = path.join(workDir, 'voice.config.json');
   }
 

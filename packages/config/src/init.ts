@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 // 获取当前文件的目录
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// 修改路径解析，确保在编译后能正确找到example目录
 const exampleDir = path.resolve(__dirname, '../example');
 
 export interface InitOptions {
@@ -27,7 +28,19 @@ export interface InitResult {
  * 初始化配置文件到指定的工作目录
  */
 export function initializeConfig(options: InitOptions): InitResult {
-  const { workDir, force = false, onlyVoice = false, onlyMcp = false } = options;
+  let { workDir, force = false, onlyVoice = false, onlyMcp = false } = options;
+  if(!path.isAbsolute(workDir)){
+    workDir = path.resolve(process.cwd(), workDir);
+  }
+  if(!fs.existsSync(workDir)){
+    return {
+      success: false,
+      message: `工作目录不存在: ${workDir}`,
+      createdFiles: [],
+      skippedFiles: [],
+      errors: [`工作目录不存在: ${workDir}`]
+    };
+  }
   const result: InitResult = {
     success: true,
     message: '',
