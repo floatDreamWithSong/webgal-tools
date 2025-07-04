@@ -7,11 +7,11 @@
 ```
 webgal-mcp/
 ├── apps/
-│   ├── mcp-server/     # MCP服务器应用 (@webgal-mcp/mcp-server)
-│   └── voice/          # 语音合成应用 (@webgal-mcp/voice)
+│   ├── mcp-server/     # MCP服务器应用 (@webgal-tools/mcp-server)
+│   └── voice/          # 语音合成应用 (@webgal-tools/voice)
 ├── packages/
-│   ├── config/         # 配置包 (@webgal-mcp/config)
-│   └── logger/         # 日志包 (@webgal-mcp/logger)
+│   ├── config/         # 配置包 (@webgal-tools/config)
+│   └── logger/         # 日志包 (@webgal-tools/logger)
 └── scripts/
     └── publish.js      # 发布脚本
 ```
@@ -22,7 +22,7 @@ webgal-mcp/
 
 确保你已经：
 - 登录到 npm：`pnpm login`
-- 有发布权限到 `@webgal-mcp` 组织（或创建该组织）
+- 有发布权限到 `@webgal-tools` 组织（或创建该组织）
 - 代码已经提交到 git
 
 **注意**：所有包都配置为公共包（`"access": "public"`），这意味着任何人都可以安装使用，无需付费。

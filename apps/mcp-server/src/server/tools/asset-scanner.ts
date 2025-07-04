@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { getMcpConfig } from '@webgal-mcp/config';
+import { getMcpConfig } from '@webgal-tools/config';
 import { AssetType, SUPPORTED_EXTENSIONS, ScanDetails } from './asset-types.js';
 import { getWorkDir } from '../index.js';
 

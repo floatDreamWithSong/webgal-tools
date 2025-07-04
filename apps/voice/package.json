@@ -1,6 +1,6 @@
 {
-  "name": "@webgal-mcp/voice",
-  "version": "1.0.0",
+  "name": "@webgal-tools/voice",
+  "version": "1.0.1",
   "description": "WebGAL GPT-SoVITS语音合成应用",
   "type": "module",
   "main": "dist/main.js",
@@ -35,8 +35,8 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@webgal-mcp/config": "workspace:*",
-    "@webgal-mcp/logger": "workspace:*",
+    "@webgal-tools/config": "workspace:*",
+    "@webgal-tools/logger": "workspace:*",
     "@ai-sdk/anthropic": "^1.2.12",
     "@ai-sdk/cohere": "^1.2.10",
     "@ai-sdk/google": "^1.2.19",

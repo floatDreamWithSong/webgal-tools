@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { getVoiceConfig } from '@webgal-mcp/config';
+import { getVoiceConfig } from '@webgal-tools/config';
 import { VoiceGenerationConfig, LANGUAGE_OPTIONS } from './request.js';
 
 export interface CharacterVoiceConfig {
@@ -15,7 +15,7 @@ export interface CharacterVoiceConfig {
 }
 
 export interface TranslateConfig {
-  enabled: boolean;
+  check: boolean;
   model_type: 'ollama' | 'openai' | 'anthropic' | 'google' | 'mistral' | 'cohere' | 'custom';
   base_url: string;
   api_key?: string;
@@ -170,12 +170,12 @@ export class VoiceConfigManager {
    * 验证翻译配置
    */
   private validateTranslateConfig(config: TranslateConfig): void {
-    if (typeof config.enabled !== 'boolean') {
-      throw new Error('配置文件的 translate.enabled 必须是布尔值');
+    if (typeof config.check !== 'boolean') {
+      throw new Error('配置文件的 translate.check 必须是布尔值');
     }
 
     // 如果禁用翻译，跳过其他验证
-    if (!config.enabled) {
+    if (!config.check) {
       return;
     }
 
@@ -334,7 +334,7 @@ export class VoiceConfigManager {
    */
   isTranslateEnabled(): boolean {
     const config = this.loadConfig();
-    return config.translate?.enabled ?? false;
+    return config.translate?.check ?? false;
   }
 
   /**

@@ -1,5 +1,5 @@
 {
-  "name": "@webgal-mcp/config",
+  "name": "@webgal-tools/config",
   "version": "1.0.0",
   "description": "统一的配置文件加载和管理",
   "type": "module",

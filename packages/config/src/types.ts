@@ -36,7 +36,7 @@ export interface TranslateConfig {
   base_url: string;
   api_key?: string;
   model_name: string;
-  enabled: boolean;
+  check: boolean;
   context_size: number;
   additional_prompt?: string;
 }

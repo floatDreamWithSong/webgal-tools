@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { loadVoiceConfig, getVoiceConfig, getMaxTranslator, initializeConfig } from "@webgal-mcp/config";
-import { logger } from "@webgal-mcp/logger";
+import { loadVoiceConfig, getVoiceConfig, getMaxTranslator, initializeConfig } from "@webgal-tools/config";
+import { logger } from "@webgal-tools/logger";
 import { VoiceGenerator } from "./generator.js";
 
 // 获取工作目录

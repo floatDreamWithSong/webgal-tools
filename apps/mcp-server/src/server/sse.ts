@@ -1,7 +1,7 @@
 import express, { Request, Response, Express } from 'express';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { server } from './index.js';
-import { logger } from '@webgal-mcp/logger';
+import { logger } from '@webgal-tools/logger';
 
 // 存储多个并发连接的transport
 const transports: { [sessionId: string]: SSEServerTransport } = {};

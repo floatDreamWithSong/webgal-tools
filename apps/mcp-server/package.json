@@ -1,5 +1,5 @@
 {
-  "name": "@webgal-mcp/mcp-server",
+  "name": "@webgal-tools/mcp-server",
   "version": "1.5.0",
   "description": "WebGAL MCP服务器应用",
   "type": "module",
@@ -39,8 +39,8 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@webgal-mcp/config": "workspace:*",
-    "@webgal-mcp/logger": "workspace:*",
+    "@webgal-tools/config": "workspace:*",
+    "@webgal-tools/logger": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.3",
     "express": "^4.18.2"
   },

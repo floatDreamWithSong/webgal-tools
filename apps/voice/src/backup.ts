@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { logger } from '@webgal-mcp/logger';
+import { logger } from '@webgal-tools/logger';
 
 export class BackupManager {
   private backupDir: string;

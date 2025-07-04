@@ -1,5 +1,5 @@
 {
-  "name": "@webgal-mcp/logger",
+  "name": "@webgal-tools/logger",
   "version": "1.0.0",
   "description": "统一的日志记录服务",
   "type": "module",

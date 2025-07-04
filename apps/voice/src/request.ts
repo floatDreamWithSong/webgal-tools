@@ -1,7 +1,7 @@
 import { EventSource } from 'eventsource';
 import fs from 'fs';
 import path from 'path';
-import { logger } from '@webgal-mcp/logger';
+import { logger } from '@webgal-tools/logger';
 
 // 语言选项映射（基于原代码中的 dict_language）
 const LANGUAGE_OPTIONS = {

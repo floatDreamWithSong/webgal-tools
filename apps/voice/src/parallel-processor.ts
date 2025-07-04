@@ -3,8 +3,8 @@ import { VoiceTask } from './generator.js';
 import { TranslateConfig, CharacterVoiceConfig } from './config.js';
 import { GPTSoVITSAPI } from './request.js';
 import { TranslateService } from './translate/index.js';
-import { getMaxTranslator } from '@webgal-mcp/config';
-import { logger } from '@webgal-mcp/logger';
+import { getMaxTranslator } from '@webgal-tools/config';
+import { logger } from '@webgal-tools/logger';
 
 interface TranslateTask {
   id: string;

@@ -6,7 +6,7 @@ import { createMistral } from '@ai-sdk/mistral';
 import { createCohere } from '@ai-sdk/cohere';
 import { createOllama } from 'ollama-ai-provider';
 import { TranslateConfig, CharacterVoiceConfig } from '../config.js';
-import { logger } from '@webgal-mcp/logger';
+import { logger } from '@webgal-tools/logger';
 
 /**
  * 角色语言特色配置存储

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { server, setWorkDir } from "./server/index.js";
-import { loadMcpConfig, runConfigInitCLI, printUsage } from "@webgal-mcp/config";
-import { logger } from "@webgal-mcp/logger";
+import { loadMcpConfig, runConfigInitCLI, printUsage } from "@webgal-tools/config";
+import { logger } from "@webgal-tools/logger";
 import { startSSEServer } from "./server/sse.js";
 
 // 获取工作目录
@@ -65,7 +65,7 @@ async function main() {
     }
     
     // 只初始化mcp.config.json文件
-    const { initializeConfig } = await import('@webgal-mcp/config');
+    const { initializeConfig } = await import('@webgal-tools/config');
     const initResult = initializeConfig({
       workDir,
       force: forceMode,

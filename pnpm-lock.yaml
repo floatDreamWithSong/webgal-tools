@@ -50,10 +50,10 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.3
         version: 1.12.3
-      '@webgal-mcp/config':
+      '@webgal-tools/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@webgal-mcp/logger':
+      '@webgal-tools/logger':
         specifier: workspace:*
         version: link:../../packages/logger
       express:
@@ -90,10 +90,10 @@ importers:
       '@mastra/core':
         specifier: ^0.10.6
         version: 0.10.10(@sinclair/typebox@0.34.35)(openapi-types@12.1.3)(react@18.3.1)(zod@3.25.67)
-      '@webgal-mcp/config':
+      '@webgal-tools/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@webgal-mcp/logger':
+      '@webgal-tools/logger':
         specifier: workspace:*
         version: link:../../packages/logger
       ai:

@@ -10,7 +10,7 @@ import { BackupManager } from './backup.js';
 import { ContextExtractor } from './context.js';
 import { ParallelProcessor } from './parallel-processor.js';
 import { TranslateService } from './translate/index.js';
-import { logger } from '@webgal-mcp/logger';
+import { logger } from '@webgal-tools/logger';
 
 export interface VoiceTask {
   character: string;
