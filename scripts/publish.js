@@ -4,8 +4,8 @@ import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-const apps = ['mcp-server', 'voice'];
-const packages = ['config', 'logger'];
+const apps = [];
+const packages = ['config'];
 
 // 获取版本号
 function getVersion(packagePath) {

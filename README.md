@@ -50,7 +50,7 @@ npx @webgal-tools/voice -webgal <你的游戏目录> init
   "translate": {
     "model_type": "ollama", // 模型服务提供商
     "base_url": "http://localhost:11434/api", // 模型服务地址，现在展示的是本地ollama模型的
-    "model_name": "gemma3n:e4b", // 模型名称，本地模型的话推荐使用这个模型或者e2b，显存消耗小，日语翻译能力有提升
+    "model_name": "glm4:9b", // 模型名称，不一定选择这个模型，但是尽量不要选思考模型
     "check": true, // 是否在翻译前校验模型的可用性，可开可不开，如果你完全不需要翻译功能，请设置为false
     "context_size": 2, // 将对话上下文附近的n行内容加入上下文，可能提升翻译质量
     "additional_prompt":"人名信息：睦，全名若叶（わかば）睦（むつみ）。学生" // 全局prompt，将作为翻译模型的上下文信息，可不设置
@@ -128,7 +128,7 @@ npx @webgal-tools/voice -webgal <你的游戏目录> -voice scene1.txt -force
 4. **我不想使用翻译功能**：设置`translate.check`为`false`，并每个角色都不要设置`translate_to`。
 5. **我想让部分角色使用翻译功能**：需要使用翻译的角色要配置`translate_to`为目标语言，不翻译的角色不要配置
 6. **GPT-SOVITS在哪**：这是Github的一个开源项目，B站上也有很多作者的整合包，本项目的不再赘述
-7. **翻译模型怎么选**：如果你用的是本地部署的Ollama服务的模型，个人推荐`gemma3n:e4b`，使用`gemma`类的模型时注意Ollama版本必须是在`0.9.4`以上的才行
+7. **翻译模型怎么选**：如果你用的是本地部署的Ollama服务的模型，个人推荐`glm4:9b`。如果你使用`gemma`类的模型，则注意Ollama版本必须是在`0.9.4`以上的才行
 8. **有懒人整合包吗**：正在整合，不过还是推荐你安装一个较现代node环境，并学习本项目少量的命令行操作。整合包也只是整合了运行环境。
 ---
 

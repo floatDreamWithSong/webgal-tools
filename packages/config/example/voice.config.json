@@ -7,20 +7,41 @@
   "translate": {
     "model_type": "ollama",
     "base_url": "http://localhost:11434/api",
-    "model_name": "gemma3n:e4b",
+    "model_name": "glm4:9b",
     "check": true,
     "context_size": 2,
-    "additional_prompt": "人名翻译规则：\n- 睦/若叶睦 → むつみ\n- 祥/祥子/丰川祥子 → さき（昵称'小祥'必须译为'さきちゃん'）\n- 初华/三角初华 → ういか\n- 喵梦/若麦/佑天寺 → にゃむ（自称）/ユウテンさん（他称）\n- 海铃/八幡海铃 → うみり\n角色口吻特征：\n• 祥子：使用'ですわ'等大小姐敬语，命令式口吻\n• 初华：温柔关西腔，句尾多用'ね'、'よ'\n• 若叶：寡言短句，无感情起伏\n• 若麦：网络流行语+猫语'にゃ'\n• 海铃：理性分析腔，多用'でしょう'等推量形"
+    "additional_prompt": "人名翻译规则：\n- 睦/若叶睦 → むつみ\n- 祥/祥子/丰川祥子 → さきちゃん\n- 初华/三角初华 → ういか\n- 喵梦/若麦/佑天寺 → にゃむ（自称）/ユウテンさん（他称）\n- 海铃/八幡海铃 → うみり\n角色口吻特征：\n• 祥子：使用'ですわ'等大小姐敬语，命令式口吻\n• 初华：温柔关西腔，句尾多用'ね'、'よ'\n• 若叶：寡言短句，无感情起伏\n• 若麦：网络流行语+猫语'にゃ'\n• 海铃：理性分析腔，多用'でしょう'等推量形"
   },
   "characters": [
     {
-      "character_name": "丰川祥子",
-      "gpt": "GPT_weights_v2ProPlus/Mujica_豊川祥子_黒_v2pp.ckpt",
-      "sovits": "SoVITS_weights_v2ProPlus/Mujica_豊川祥子_黒_v2pp.pth",
-      "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/丰川祥子（黑祥）/(A)今後は発言にプロとしての自覚をお持ちになって.wav",
-      "ref_text": "今後は発言にプロとしての自覚をお持ちになって",
-      "prompt": "【口吻】高傲威严的大小姐腔调，善用命令句式（〜なさい/〜ですわ），语速中等偏快，强调重音明显。日文自称'私（わたくし）'，他称'諸君'。代表句尾：'ですわ'、'かしら'",
+      "character_name": "喵梦",
+      "auto": true,
+      "gpt": "GPT_weights_v2ProPlus/mygo-mujica/祐天寺若麦（喵梦）（Nyamu）",
+      "sovits": "SoVITS_weights_v2ProPlus/mygo-mujica/祐天寺若麦（喵梦）（Nyamu）",
+      "ref_audio": "D:/AIVoice/W_A/祐天寺若麦（喵梦）（Nyamu）",
+      "prompt": "【口吻】轻浮活泼的网络主播腔，句尾音调上扬快活。自称'にゃむ'，称呼他人用'〜ち'（例：むつち）。代表句式：'超ヤバいにゃ！'、'ファンサービスしよっか〜'",
       "translate_to": "日文",
+      "inferrence_config": {
+        "prompt_language": "日文",
+        "text_language": "日文",
+        "how_to_cut": "凑四句一切",
+        "top_k": 15,
+        "top_p": 1.0,
+        "temperature": 1.0,
+        "speed": 1,
+        "sample_steps": 8,
+        "if_sr": false,
+        "pause_second": 0.2
+      }
+    },
+    {
+      "character_name": "祥子",
+      "gpt": "GPT_weights_v2ProPlus/mygo-mujica/丰川祥子（Sakiko）/丰川祥子_neutral_v2pp.ckpt",
+      "sovits": "SoVITS_weights_v2ProPlus/mygo-mujica/丰川祥子（Sakiko）/丰川祥子_neutral_v2pp.pth",
+      "ref_audio": "D:/AIVoice/W_A/丰川祥子（Sakiko）/neutral/あなたと空を見上げるのは、いつも夏でしたわね.wav",
+      "ref_text": "あなたと空を見上げるのは、いつも夏でしたわね",
+      "prompt": "【口吻】高傲威严的大小姐腔调，善用命令句式（〜なさい/〜ですわ），语速中等偏快，强调重音明显。日文自称'私（わたくし）'，他称'諸君'。代表句尾：'ですわ'、'かしら'",
+      "translate_to": "日语",
       "inferrence_config": {
         "prompt_language": "日文",
         "text_language": "日文",
@@ -72,26 +93,6 @@
         "sample_steps": 8,
         "if_sr": false,
         "pause_second": 0.3
-      }
-    },{
-      "character_name": "Nyamu",
-      "gpt": "GPT_weights_v2ProPlus/Mujica_祐天寺若麥_乖猫_v2pp.ckpt",
-      "sovits": "SoVITS_weights_v2ProPlus/Mujica_祐天寺若麥_乖猫_v2pp.pth",
-      "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/喵梦_乖猫/(A)そんなおびえないでよ。あたし、ムーコと仲良くなりたいんだ.wav",
-      "ref_text": "そんなおびえないでよ。あたし、ムーコと仲良くなりたいんだ",
-      "prompt": "【口吻】轻浮活泼的网络主播腔，句尾音调上扬快活。自称'にゃむ'，称呼他人用'〜ち'（例：むつち）。代表句式：'超ヤバいにゃ！'、'ファンサービスしよっか〜'",
-      "translate_to": "日文",
-      "inferrence_config": {
-        "prompt_language": "日文",
-        "text_language": "日文",
-        "how_to_cut": "凑四句一切",
-        "top_k": 15,
-        "top_p": 1.0,
-        "temperature": 1.0,
-        "speed": 1,
-        "sample_steps": 8,
-        "if_sr": false,
-        "pause_second": 0.2
       }
     },{
       "character_name": "Umiri",

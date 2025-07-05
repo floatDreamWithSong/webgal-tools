@@ -5,6 +5,8 @@ import { GPTSoVITSAPI } from './request.js';
 import { TranslateService } from './translate/index.js';
 import { getMaxTranslator } from '@webgal-tools/config';
 import { logger } from '@webgal-tools/logger';
+import { ModelScanner } from './model-scanner.js';
+import { ScannedModelFiles, EmotionRecognitionResult } from '@webgal-tools/config';
 
 interface TranslateTask {
   id: string;
@@ -14,6 +16,8 @@ interface TranslateTask {
   audioFileName: string;
   context?: string;
   characterConfig?: CharacterVoiceConfig;
+  isAutoMode?: boolean; // 新增：标识是否为自动模式
+  gptSovitsPath?: string; // 新增：GPT-SoVITS路径
 }
 
 interface TranslateResult {
@@ -24,6 +28,8 @@ interface TranslateResult {
   audioFileName: string;
   success: boolean;
   error?: string;
+  isAutoMode?: boolean; // 新增：标识是否为自动模式
+  emotionResult?: EmotionRecognitionResult; // 新增：情绪识别结果
 }
 
 interface VoiceSynthesisTask extends VoiceTask {
@@ -38,6 +44,7 @@ export class ParallelProcessor {
   private api: GPTSoVITSAPI;
   private audioOutputDir: string;
   private translateService: TranslateService;
+  private gptSovitsPath: string; // 新增：GPT-SoVITS路径
 
   // 状态跟踪
   private totalTasks = 0;
@@ -59,9 +66,10 @@ export class ParallelProcessor {
   private onVoiceProgress?: (completed: number, total: number, result: VoiceTask) => void;
   private onError?: (error: Error, task: TranslateTask | VoiceTask) => void;
 
-  constructor(api: GPTSoVITSAPI, audioOutputDir: string) {
+  constructor(api: GPTSoVITSAPI, audioOutputDir: string, gptSovitsPath?: string) {
     this.api = api;
     this.audioOutputDir = audioOutputDir;
+    this.gptSovitsPath = gptSovitsPath || '';
     this.translateService = new TranslateService();
     // 从配置获取最大并发数
     this.maxConcurrency = getMaxTranslator();
@@ -126,14 +134,56 @@ export class ParallelProcessor {
     try {
       logger.info(`🔄 开始翻译: ${task.character} - ${task.originalText.substring(0, 20)}...`);
 
-      const translatedText = await this.translateService.translate(
-        task.character,
-        task.originalText,
-        task.targetLanguage,
-        config,
-        task.characterConfig,
-        task.context
-      );
+      let translatedText: string;
+      let emotionResult: EmotionRecognitionResult | undefined;
+
+      if (task.isAutoMode && task.characterConfig && task.gptSovitsPath) {
+        // 自动模式：执行情绪识别和模型选择
+        logger.info(`🤖 [${task.character}] 自动模式 - 执行情绪识别和模型选择...`);
+        
+        // 构建文件夹路径
+        const gptDir = path.resolve(task.gptSovitsPath, task.characterConfig.gpt);
+        const sovitsDir = path.resolve(task.gptSovitsPath, task.characterConfig.sovits);
+        const refAudioDir = task.characterConfig.ref_audio;
+
+        // 扫描模型文件
+        const scannedFiles = ModelScanner.scanModelFiles(task.gptSovitsPath, gptDir, sovitsDir, refAudioDir);
+
+        // 检查是否有足够的文件
+        if (scannedFiles.gpt_files.length === 0) {
+          throw new Error(`未找到GPT模型文件在: ${gptDir}`);
+        }
+        if (scannedFiles.sovits_files.length === 0) {
+          throw new Error(`未找到SoVITS模型文件在: ${sovitsDir}`);
+        }
+        if (scannedFiles.ref_audio_files.length === 0) {
+          throw new Error(`未找到参考音频文件在: ${refAudioDir}`);
+        }
+
+        // 执行情绪识别和模型选择
+        emotionResult = await this.translateService.selectModelAndTranslate(
+          task.character,
+          task.originalText,
+          task.targetLanguage,
+          scannedFiles,
+          config,
+          task.characterConfig,
+          task.context
+        );
+
+        translatedText = emotionResult.translated_text;
+        logger.info(`✅ [${task.character}] 自动模式翻译完成 - 情绪: ${emotionResult.emotion}`);
+      } else {
+        // 正常模式：常规翻译
+        translatedText = await this.translateService.translate(
+          task.character,
+          task.originalText,
+          task.targetLanguage,
+          config,
+          task.characterConfig,
+          task.context
+        );
+      }
 
       const result: TranslateResult = {
         id: task.id,
@@ -141,7 +191,9 @@ export class ParallelProcessor {
         originalText: task.originalText,
         translatedText,
         audioFileName: task.audioFileName,
-        success: true
+        success: true,
+        isAutoMode: task.isAutoMode,
+        emotionResult
       };
 
       logger.info(`✅ 翻译完成: ${task.character} - ${translatedText.substring(0, 20)}...`);
@@ -157,7 +209,8 @@ export class ParallelProcessor {
         translatedText: task.originalText, // 失败时使用原文
         audioFileName: task.audioFileName,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
+        isAutoMode: task.isAutoMode
       };
 
       if (this.onError) {
@@ -253,15 +306,46 @@ export class ParallelProcessor {
         throw new Error(`未找到角色配置: ${translateResult.character}`);
       }
 
-      // 检查是否需要切换角色模型
-      if (this.currentCharacter !== translateResult.character) {
-        logger.info(`🔄 切换到角色: ${translateResult.character}`);
+      let finalCharacterConfig: CharacterVoiceConfig;
+      let refAudioPath: string;
+      let refText: string;
 
-        await this.api.setGptModel(characterConfig.gpt);
+      if (translateResult.isAutoMode && translateResult.emotionResult) {
+        // 自动模式：使用情绪识别结果
+        const emotionResult = translateResult.emotionResult;
+        
+        // 创建临时的角色配置
+        finalCharacterConfig = {
+          ...characterConfig,
+          gpt: emotionResult.gpt,
+          sovits: emotionResult.sovits,
+          ref_audio: emotionResult.ref_audio,
+          ref_text: ModelScanner.extractRefTextFromAudioFileName(emotionResult.ref_audio)
+        };
+
+        refAudioPath = emotionResult.ref_audio;
+        refText = ModelScanner.extractRefTextFromAudioFileName(emotionResult.ref_audio);
+        
+        logger.info(`🤖 [${translateResult.character}] 自动模式 - 使用情绪: ${emotionResult.emotion}`);
+      } else {
+        // 正常模式：使用原配置
+        finalCharacterConfig = characterConfig;
+        refAudioPath = characterConfig.ref_audio;
+        refText = characterConfig.ref_text;
+      }
+
+      // 检查是否需要切换角色模型
+      const modelKey = `${finalCharacterConfig.gpt}_${finalCharacterConfig.sovits}`;
+      const currentModelKey = this.currentCharacter ? `${this.characterConfigs?.get(this.currentCharacter)?.gpt}_${this.characterConfigs?.get(this.currentCharacter)?.sovits}` : null;
+
+      if (currentModelKey !== modelKey) {
+        logger.info(`🔄 切换到角色模型: ${translateResult.character} (${finalCharacterConfig.gpt}/${finalCharacterConfig.sovits})`);
+
+        await this.api.setGptModel(finalCharacterConfig.gpt);
         await this.api.setSovitsModel(
-          characterConfig.sovits,
-          characterConfig.inferrence_config?.prompt_language || '中文',
-          characterConfig.inferrence_config?.text_language || '中文'
+          finalCharacterConfig.sovits,
+          finalCharacterConfig.inferrence_config?.prompt_language || '中文',
+          finalCharacterConfig.inferrence_config?.text_language || '中文'
         );
 
         this.currentCharacter = translateResult.character;
@@ -269,10 +353,10 @@ export class ParallelProcessor {
 
       // 生成语音
       const outputPath = await this.api.generateVoice(
-        characterConfig.ref_audio,
-        characterConfig.ref_text,
+        refAudioPath,
+        refText,
         translateResult.translatedText,
-        characterConfig.inferrence_config || {}
+        finalCharacterConfig.inferrence_config || {}
       );
 
       // 下载音频文件
@@ -322,7 +406,8 @@ export class ParallelProcessor {
     voiceTasks: VoiceTask[],
     characterConfigs: Map<string, CharacterVoiceConfig>,
     translateConfig: TranslateConfig,
-    contextMap: Map<string, string>
+    contextMap: Map<string, string>,
+    gptSovitsPath?: string // 新增：GPT-SoVITS路径参数
   ): Promise<VoiceTask[]> {
 
     this.characterConfigs = characterConfigs;
@@ -331,6 +416,11 @@ export class ParallelProcessor {
     this.completedVoiceCount = 0;
     this.completedVoiceTasks = [];
     this.voiceQueue = [];
+
+    // 更新 gptSovitsPath 如果提供了
+    if (gptSovitsPath) {
+      this.gptSovitsPath = gptSovitsPath;
+    }
 
     if (this.totalTasks === 0) {
       return [];
@@ -350,10 +440,11 @@ export class ParallelProcessor {
       }
 
       const taskId = `${task.character}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const isAutoMode = characterConfig.auto === true;
 
       const translateTarget = characterConfig.translate_to;
-      if (translateTarget) {
-        // 需要翻译
+      if (translateTarget || isAutoMode) {
+        // 需要翻译或者是自动模式
         const taskKey = `${task.character}:${task.originalText}`;
         const context = contextMap.get(taskKey);
 
@@ -361,13 +452,21 @@ export class ParallelProcessor {
           id: taskId,
           character: task.character,
           originalText: task.originalText,
-          targetLanguage: translateTarget,
+          targetLanguage: translateTarget || '中文', // 自动模式默认中文
           audioFileName: task.audioFileName,
           context,
-          characterConfig
+          characterConfig,
+          isAutoMode, // 标识是否为自动模式
+          gptSovitsPath: this.gptSovitsPath
         };
 
         translateTasks.push(translateTask);
+        
+        if (isAutoMode) {
+          logger.info(`🤖 创建自动模式任务: ${task.character} - ${task.originalText.substring(0, 20)}...`);
+        } else {
+          logger.info(`📝 创建翻译任务: ${task.character} - ${task.originalText.substring(0, 20)}...`);
+        }
       } else {
         // 不需要翻译，直接使用原文
         const result: TranslateResult = {
@@ -376,10 +475,12 @@ export class ParallelProcessor {
           originalText: task.originalText,
           translatedText: task.originalText,
           audioFileName: task.audioFileName,
-          success: true
+          success: true,
+          isAutoMode: false
         };
 
         noTranslateTasks.push(result);
+        logger.info(`✅ 无需翻译任务: ${task.character} - ${task.originalText.substring(0, 20)}...`);
       }
     }
 
@@ -388,8 +489,13 @@ export class ParallelProcessor {
       this.enqueueVoiceSynthesis(result);
     }
 
-    // 并发执行翻译任务
+    // 并发执行翻译任务（包括自动模式和普通模式）
     if (translateTasks.length > 0) {
+      const autoModeCount = translateTasks.filter(t => t.isAutoMode).length;
+      const normalModeCount = translateTasks.length - autoModeCount;
+      
+      logger.info(`📊 开始并行处理翻译任务: 自动模式 ${autoModeCount} 个, 普通模式 ${normalModeCount} 个`);
+      
       await this.translateTasks(translateTasks, translateConfig);
     }
 

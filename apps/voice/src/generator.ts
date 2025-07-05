@@ -2,14 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
 import { DialogueChunk, WebGALScriptCompiler } from './compiler.js';
-import { checkTranslatorService, setCharacterStyle } from './translate/index.js';
+import { checkTranslatorService, setCharacterStyle, translateService } from './translate/index.js';
 import { GPTSoVITSAPI } from './request.js';
 // 移除getEnvConfig依赖，使用当前工作目录
-import { VoiceConfigManager, CharacterVoiceConfig } from './config.js';
+import { VoiceConfigManager, CharacterVoiceConfig, TranslateConfig } from './config.js';
 import { BackupManager } from './backup.js';
 import { ContextExtractor } from './context.js';
 import { ParallelProcessor } from './parallel-processor.js';
-import { TranslateService } from './translate/index.js';
 import { logger } from '@webgal-tools/logger';
 
 export interface VoiceTask {
@@ -34,10 +33,10 @@ export class VoiceGenerator {
     this.configManager = new VoiceConfigManager(this.workDir);
     this.backupManager = new BackupManager(this.workDir);
     this.api = new GPTSoVITSAPI(
-      this.configManager.getGptSovitsUrl(), 
+      this.configManager.getGptSovitsUrl(),
       this.configManager.getModelVersion()
     );
-    this.audioOutputDir = path.join(this.workDir,'vocal');
+    this.audioOutputDir = path.join(this.workDir, 'vocal');
     this.ensureAudioDir();
     this.initializeCharacterStyles();
   }
@@ -76,7 +75,7 @@ export class VoiceGenerator {
       .update(`${character}:${text}`)
       .digest('hex')
       .substring(0, 12); // 取前12位作为文件名
-    
+
     return `${character}_${contentHash}.wav`;
   }
 
@@ -109,7 +108,7 @@ export class VoiceGenerator {
    */
   private deleteAudioFile(audioFileName: string): void {
     if (!audioFileName.trim()) return;
-    
+
     const audioPath = path.join(this.audioOutputDir, audioFileName);
     if (fs.existsSync(audioPath)) {
       try {
@@ -129,22 +128,22 @@ export class VoiceGenerator {
   private createVoiceTasks(addedDialogues: DialogueChunk[]): VoiceTask[] {
     const tasks: VoiceTask[] = [];
     const uniqueTasks = new Map<string, VoiceTask>(); // 用于去重的映射
-    
+
     logger.info(`📋 创建语音任务，共 ${addedDialogues.length} 个对话`);
 
     for (const dialogue of addedDialogues) {
       const contentHash = this.generateContentHash(dialogue.character, dialogue.text);
       const audioFileName = this.generateAudioFileName(dialogue.character, dialogue.text);
-      
+
       // 检查音频文件是否已存在
       if (this.audioFileExists(audioFileName)) {
         logger.info(`✅ 音频文件已存在，跳过任务: ${audioFileName}`);
         continue;
       }
-      
+
       // 使用内容哈希作为去重key
       const taskKey = contentHash;
-      
+
       if (!uniqueTasks.has(taskKey)) {
         const task: VoiceTask = {
           character: dialogue.character,
@@ -153,7 +152,7 @@ export class VoiceGenerator {
           audioFileName,
           contentHash
         };
-        
+
         uniqueTasks.set(taskKey, task);
         tasks.push(task);
         logger.info(`📝 创建任务: ${dialogue.character} - ${dialogue.text.substring(0, 20)}...`);
@@ -181,7 +180,7 @@ export class VoiceGenerator {
     if (this.configManager.isTranslateEnabled()) {
       const translateConfig = this.configManager.getTranslateConfig();
       logger.info(`检查 ${translateConfig.model_type} 服务可用性...`);
-      
+
       const isServiceAvailable = await checkTranslatorService(translateConfig);
       if (!isServiceAvailable) {
         logger.warn(`${translateConfig.model_type} 服务不可用，将跳过翻译步骤`);
@@ -191,47 +190,67 @@ export class VoiceGenerator {
 
     // 准备角色配置映射
     const characterConfigs = new Map<string, CharacterVoiceConfig>();
+    let hasAutoModeTask = false;
+    let hasNormalModeTask = false;
+
     for (const task of tasks) {
       const config = this.configManager.getCharacterConfig(task.character);
       if (config) {
         characterConfigs.set(task.character, config);
+        
+        // 统计任务类型
+        if (config.auto === true) {
+          hasAutoModeTask = true;
+        } else {
+          hasNormalModeTask = true;
+        }
       } else {
         logger.error(`❌ 角色 ${task.character} 未在 voice.config.json 中配置`);
       }
     }
+
+    logger.info(`📊 任务统计: 自动模式 ${hasAutoModeTask ? '有' : '无'}, 普通模式 ${hasNormalModeTask ? '有' : '无'}`);
 
     // 提取上下文信息
     const contextMap: Map<string, string> = new Map();
     if (allDialogues && allDialogues.length > 0 && this.configManager.isTranslateEnabled()) {
       logger.info('📖 提取对话上下文以提高翻译质量...');
       const translateConfig = this.configManager.getTranslateConfig();
-      
+
       for (const task of tasks) {
-        const dialogueIndex = allDialogues.findIndex(d => 
+        const dialogueIndex = allDialogues.findIndex(d =>
           d.character === task.character && d.text === task.originalText
         );
-        
+
         if (dialogueIndex !== -1) {
           const contextSize = translateConfig.context_size || 2;
           const contextInfo = ContextExtractor.extractContext(allDialogues, dialogueIndex, contextSize);
-          
+
           if (contextInfo.contextText) {
             const taskKey = `${task.character}:${task.originalText}`;
             contextMap.set(taskKey, contextInfo.contextText);
           }
         }
       }
-      
+
       logger.info(`为 ${contextMap.size} 个对话提取了上下文信息`);
     }
 
-    // 使用并行处理器
-    const processor = new ParallelProcessor(this.api, this.audioOutputDir);
+    // 使用统一的并行处理器处理所有任务
+    logger.info(`🚀 开始统一并行处理 ${tasks.length} 个任务...`);
     
+    const config = this.configManager.loadConfig();
+    const processor = new ParallelProcessor(
+      this.api, 
+      this.audioOutputDir, 
+      config.gpt_sovits_path // 传递 GPT-SoVITS 路径
+    );
+
     // 设置进度回调函数
     processor.setCallbacks({
       onTranslateProgress: (completed, total, result) => {
-        logger.info(`📝 翻译进度: ${completed}/${total} - ${result.character}: ${result.translatedText.substring(0, 30)}...`);
+        const mode = result.isAutoMode ? '自动模式' : '普通模式';
+        logger.info(`📝 ${mode}翻译进度: ${completed}/${total} - ${result.character}: ${result.translatedText.substring(0, 30)}...`);
       },
       onVoiceProgress: (completed, total, result) => {
         logger.info(`🎵 语音合成进度: ${completed}/${total} - ${result.character}: ${result.audioFileName}`);
@@ -240,16 +259,18 @@ export class VoiceGenerator {
         logger.error(`❌ 任务处理失败: ${task.character} - ${error.message}`);
       }
     });
-    
+
     try {
       const translateConfig = this.configManager.getTranslateConfig();
       const successfulTasks = await processor.processTasksParallel(
         tasks,
         characterConfigs,
         translateConfig,
-        contextMap
+        contextMap,
+        config.gpt_sovits_path
       );
-      
+
+      logger.info(`🎉 统一并行处理完成: 成功处理 ${successfulTasks.length}/${tasks.length} 个任务`);
       return successfulTasks;
     } finally {
       processor.cleanup();
@@ -262,8 +283,8 @@ export class VoiceGenerator {
    * @param forceMode 强制模式，清理现有音频文件并重新生成所有语音
    */
   async generateVoice(fileName: string, forceMode: boolean = false): Promise<void> {
-    const filePath = path.resolve(this.workDir,'scene', fileName);
-    
+    const filePath = path.resolve(this.workDir, 'scene', fileName);
+
     if (!fs.existsSync(filePath)) {
       throw new Error(`脚本文件不存在: ${filePath}`);
     }
@@ -272,14 +293,14 @@ export class VoiceGenerator {
     if (forceMode) {
       logger.info(`⚡ 强制模式：清理现有音频文件并重新生成所有语音`);
     }
-    
+
     // 获取配置的角色列表
     const configuredCharacters = this.configManager.getAllCharacterNames();
-    
+
     // 解析所有对话
     const allDialogues = WebGALScriptCompiler.parseScript(filePath, configuredCharacters);
     logger.info(`📖 解析到 ${allDialogues.length} 条对话`);
-    
+
     if (allDialogues.length === 0) {
       logger.info('没有找到需要处理的对话');
       return;
@@ -296,7 +317,7 @@ export class VoiceGenerator {
           this.deleteAudioFile(audioFileName);
         }
       }
-      
+
       // 所有对话都需要重新生成
       needVoiceDialogues = allDialogues;
       logger.info(`强制模式：将重新生成 ${needVoiceDialogues.length} 条对话的语音`);
@@ -311,7 +332,7 @@ export class VoiceGenerator {
           logger.info(`✅ 音频已缓存: ${dialogue.character} - ${dialogue.text.substring(0, 20)}...`);
         }
       }
-      
+
       logger.info(`检查完成：${allDialogues.length} 条对话中，${needVoiceDialogues.length} 条需要生成语音`);
     }
 
@@ -324,7 +345,7 @@ export class VoiceGenerator {
 
     // 创建语音生成任务
     const voiceTasks = this.createVoiceTasks(needVoiceDialogues);
-    
+
     if (voiceTasks.length === 0) {
       logger.info('没有有效的语音生成任务');
       return;
@@ -347,8 +368,8 @@ export class VoiceGenerator {
    * @param successfulTasks 成功的语音任务（可选）
    */
   private updateScriptFileReferences(
-    filePath: string, 
-    allDialogues: DialogueChunk[], 
+    filePath: string,
+    allDialogues: DialogueChunk[],
     successfulTasks?: VoiceTask[]
   ): void {
     // 创建任务映射
@@ -363,11 +384,11 @@ export class VoiceGenerator {
 
     // 更新所有对话的音频文件信息
     const updatedDialogues: DialogueChunk[] = [];
-    
+
     for (const dialogue of allDialogues) {
       const contentHash = this.generateContentHash(dialogue.character, dialogue.text);
       let audioFileName: string | undefined;
-      
+
       // 优先使用新生成的任务结果
       const task = taskMap.get(contentHash);
       if (task) {
@@ -379,20 +400,20 @@ export class VoiceGenerator {
           audioFileName = cachedAudioFileName;
         }
       }
-      
+
       // 创建更新后的对话块
       const updatedDialogue: DialogueChunk = {
         ...dialogue,
         audioFile: audioFileName,
         volume: audioFileName ? this.configManager.getDefaultVolume().toString() : dialogue.volume
       };
-      
+
       updatedDialogues.push(updatedDialogue);
     }
-    
+
     // 使用新的重构方法生成脚本内容
     const newContent = WebGALScriptCompiler.rebuildScript(filePath, updatedDialogues);
-    
+
     // 创建备份
     try {
       const fileName = path.basename(filePath);

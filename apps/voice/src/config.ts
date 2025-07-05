@@ -5,9 +5,10 @@ import { VoiceGenerationConfig, LANGUAGE_OPTIONS } from './request.js';
 
 export interface CharacterVoiceConfig {
   character_name: string;
-  gpt: string;
-  sovits: string;
-  ref_audio: string;
+  auto?: boolean; // 是否启用自动情绪识别，默认为false
+  gpt: string; // 当auto=true时为文件夹路径，当auto=false时为文件路径
+  sovits: string; // 当auto=true时为文件夹路径，当auto=false时为文件路径
+  ref_audio: string; // 当auto=true时为文件夹路径，当auto=false时为文件路径
   ref_text: string;
   prompt?: string;
   translate_to?: string;  // 该角色的翻译目标语言，如果为空则不翻译
@@ -133,26 +134,59 @@ export class VoiceConfigManager {
         throw new Error(`${prefix} 缺少 character_name`);
       }
       
+      // 验证auto模式配置
+      const isAutoMode = character.auto === true;
+      
       if (!character.gpt) {
         throw new Error(`${prefix} 缺少 gpt 模型路径`);
       }
       
-      const gptPath = path.resolve(config.gpt_sovits_path, character.gpt);
-      if (!fs.existsSync(gptPath)) {
-        throw new Error(`${prefix} GPT模型文件不存在: ${gptPath}`);
+      if (isAutoMode) {
+        // 自动模式：验证文件夹路径
+        const gptDir = path.resolve(config.gpt_sovits_path, character.gpt);
+        if (!fs.existsSync(gptDir) || !fs.statSync(gptDir).isDirectory()) {
+          throw new Error(`${prefix} GPT模型文件夹不存在或不是目录: ${gptDir}`);
+        }
+      } else {
+        // 非自动模式：验证文件路径
+        const gptPath = path.resolve(config.gpt_sovits_path, character.gpt);
+        if (!fs.existsSync(gptPath)) {
+          throw new Error(`${prefix} GPT模型文件不存在: ${gptPath}`);
+        }
       }
       
       if (!character.sovits) {
         throw new Error(`${prefix} 缺少 sovits 模型路径`);
       }
       
-      const sovitsPath = path.resolve(config.gpt_sovits_path, character.sovits);
-      if (!fs.existsSync(sovitsPath)) {
-        throw new Error(`${prefix} SoVITS模型文件不存在: ${sovitsPath}`);
+      if (isAutoMode) {
+        // 自动模式：验证文件夹路径
+        const sovitsDir = path.resolve(config.gpt_sovits_path, character.sovits);
+        if (!fs.existsSync(sovitsDir) || !fs.statSync(sovitsDir).isDirectory()) {
+          throw new Error(`${prefix} SoVITS模型文件夹不存在或不是目录: ${sovitsDir}`);
+        }
+      } else {
+        // 非自动模式：验证文件路径
+        const sovitsPath = path.resolve(config.gpt_sovits_path, character.sovits);
+        if (!fs.existsSync(sovitsPath)) {
+          throw new Error(`${prefix} SoVITS模型文件不存在: ${sovitsPath}`);
+        }
       }
       
-      if (!character.ref_audio || !fs.existsSync(character.ref_audio)) {
-        throw new Error(`${prefix} 参考音频文件不存在: ${character.ref_audio}`);
+      if (!character.ref_audio) {
+        throw new Error(`${prefix} 缺少参考音频路径`);
+      }
+      
+      if (isAutoMode) {
+        // 自动模式：验证文件夹路径
+        if (!fs.existsSync(character.ref_audio) || !fs.statSync(character.ref_audio).isDirectory()) {
+          throw new Error(`${prefix} 参考音频文件夹不存在或不是目录: ${character.ref_audio}`);
+        }
+      } else {
+        // 非自动模式：验证文件路径
+        if (!fs.existsSync(character.ref_audio)) {
+          throw new Error(`${prefix} 参考音频文件不存在: ${character.ref_audio}`);
+        }
       }
       
       if (!character.ref_text) {

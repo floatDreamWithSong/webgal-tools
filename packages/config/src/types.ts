@@ -46,13 +46,34 @@ export interface TranslateConfig {
  */
 export interface CharacterConfig {
   character_name: string;
-  gpt: string;
-  sovits: string;
-  ref_audio: string;
+  auto?: boolean; // 是否启用自动情绪识别，默认为false
+  gpt: string; // 当auto=true时为文件夹路径，当auto=false时为文件路径
+  sovits: string; // 当auto=true时为文件夹路径，当auto=false时为文件路径
+  ref_audio: string; // 当auto=true时为文件夹路径，当auto=false时为文件路径
   ref_text: string;
   prompt?: string;
   translate_to: string;
   inferrence_config: InferrenceConfig;
+}
+
+/**
+ * 情绪识别结果接口
+ */
+export interface EmotionRecognitionResult {
+  gpt: string; // 选择的GPT模型文件路径
+  sovits: string; // 选择的SoVITS模型文件路径
+  ref_audio: string; // 选择的参考音频文件路径
+  translated_text: string; // 翻译后的文本
+  emotion: string; // 识别的情绪，如angry、sad、surprised、neutral等
+}
+
+/**
+ * 扫描到的模型文件信息
+ */
+export interface ScannedModelFiles {
+  gpt_files: string[]; // GPT模型文件路径列表
+  sovits_files: string[]; // SoVITS模型文件路径列表
+  ref_audio_files: string[]; // 参考音频文件路径列表
 }
 
 /**
