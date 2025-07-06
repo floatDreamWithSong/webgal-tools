@@ -128,7 +128,7 @@ export class VoiceConfigManager {
     }
 
     for (const [index, character] of config.characters.entries()) {
-      const prefix = `角色配置 [${index}]`;
+      const prefix = `角色 ${character.character_name} 配置 [${index}]`;
       
       if (!character.character_name) {
         throw new Error(`${prefix} 缺少 character_name`);
@@ -189,8 +189,8 @@ export class VoiceConfigManager {
         }
       }
       
-      if (!character.ref_text) {
-        throw new Error(`${prefix} 缺少参考文本 ref_text`);
+      if (!isAutoMode && !character.ref_text) {
+        throw new Error(`${prefix} 缺少非自动模式下的参考文本 ref_text`);
       }
 
       // 验证推理配置

@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "description": "WebGAL GPT-SoVITS语音合成应用",
   "type": "module",
-  "main": "dist/main.js",
+  "main": "dist/index.js",
   "bin": {
     "webgal-voice": "dist/main.js"
   },
