@@ -307,7 +307,7 @@ export function LaunchSettings({ workDir }: LaunchSettingsProps) {
       >
         {!configValid && workDirValid && (
           <div className="text-xs text-red-600 mb-3">
-            需要初始化配置文件才能开始语音合成任务
+            配置文件不存在，或者配置文件语法错误
           </div>
         )}
       </StatusCard>

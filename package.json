@@ -22,7 +22,8 @@
 		"publish:build": "node scripts/publish.js build",
 		"publish:all": "node scripts/publish.js publish",
 		"publish:beta": "node scripts/publish.js publish",
-		"release": "pnpm run publish:build && pnpm run publish:all"
+		"release": "pnpm run publish:build && pnpm run publish:all",
+		"bundle:cli": "node apps/cli/scripts/bundle.js"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.29.0",

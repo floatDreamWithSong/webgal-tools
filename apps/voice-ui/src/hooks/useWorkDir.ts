@@ -14,8 +14,11 @@ export interface UseWorkDirReturn {
   // 当前工作目录
   currentWorkDir: string | null
   
-  // 添加工作目录
+  // 添加工作目录（包含验证）
   addWorkDir: (path: string) => Promise<boolean>
+  
+  // 添加已验证的工作目录（不验证）
+  addValidatedWorkDir: (path: string) => Promise<boolean>
   
   // 选择工作目录
   selectWorkDir: (path: string) => void
@@ -96,21 +99,20 @@ export function useWorkDir(): UseWorkDirReturn {
         body: JSON.stringify({ workDir: path }),
       })
       
-      return response.ok
+      if (!response.ok) {
+        return false
+      }
+      
+      const data = await response.json()
+      return data.valid === true
     } catch (error) {
       console.error('Failed to validate work directory:', error)
       return false
     }
   }, [])
 
-  // 添加工作目录
-  const addWorkDir = useCallback(async (path: string): Promise<boolean> => {
-    // 验证目录
-    const isValid = await validateWorkDir(path)
-    if (!isValid) {
-      return false
-    }
-
+  // 添加已验证的工作目录（不验证，假设已经验证过了）
+  const addValidatedWorkDir = useCallback(async (path: string): Promise<boolean> => {
     const normalizedPath = path.replace(/\\/g, '/')
     const name = normalizedPath.split('/').pop() || normalizedPath
     const now = Date.now()
@@ -148,7 +150,18 @@ export function useWorkDir(): UseWorkDirReturn {
     })
 
     return true
-  }, [validateWorkDir, saveHistory])
+  }, [saveHistory])
+
+  // 添加工作目录（包含验证）
+  const addWorkDir = useCallback(async (path: string): Promise<boolean> => {
+    // 验证目录
+    const isValid = await validateWorkDir(path)
+    if (!isValid) {
+      return false
+    }
+
+    return await addValidatedWorkDir(path)
+  }, [validateWorkDir, addValidatedWorkDir])
 
   // 选择工作目录
   const selectWorkDir = useCallback((path: string) => {
@@ -234,6 +247,7 @@ export function useWorkDir(): UseWorkDirReturn {
     history,
     currentWorkDir,
     addWorkDir,
+    addValidatedWorkDir,
     selectWorkDir,
     removeWorkDir,
     clearHistory,

@@ -11,7 +11,7 @@ export default function Home() {
   
   const { 
     history, 
-    addWorkDir, 
+    addValidatedWorkDir, 
     removeWorkDir, 
     clearHistory, 
     getRouteParam 
@@ -27,16 +27,33 @@ export default function Home() {
     setError('')
 
     try {
-      const success = await addWorkDir(workDirInput.trim())
-      if (success) {
-        // 成功添加后跳转到dashboard
-        const routeParam = getRouteParam(workDirInput.trim())
-        router.push(`/dashboard/${routeParam}`)
+      // 直接调用验证API获取详细错误信息
+      const response = await fetch('/api/validate/workdir', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ workDir: workDirInput.trim() }),
+      })
+      
+      const data = await response.json()
+      
+      if (data.valid) {
+        // 验证成功，添加到历史记录
+        const success = await addValidatedWorkDir(workDirInput.trim())
+        if (success) {
+          // 成功添加后跳转到dashboard
+          const routeParam = getRouteParam(workDirInput.trim())
+          router.push(`/dashboard/${routeParam}`)
+        } else {
+          setError('添加工作目录失败')
+        }
       } else {
-        setError('工作目录无效或不存在')
+        // 显示具体的验证错误信息
+        setError(data.error || '工作目录无效')
       }
     } catch {
-      setError('添加工作目录失败，请检查路径是否正确')
+      setError('验证工作目录失败，请检查路径是否正确')
     } finally {
       setIsAdding(false)
     }

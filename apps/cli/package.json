@@ -1,11 +1,11 @@
 {
   "name": "@webgal-tools/cli",
-  "version": "1.6.7",
+  "version": "1.6.10",
   "description": "WebGAL 工具集统一命令行接口",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "webgal": "dist/index.js"
+    "webgal-tools-cli": "dist/index.js"
   },
   "files": [
     "dist/**/*"
@@ -30,7 +30,8 @@
     "dev": "tsc --watch",
     "clean": "rimraf dist",
     "serve": "node dist/index.js",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "bundle": "node scripts/bundle.js"
   },
   "dependencies": {
     "@webgal-tools/config": "workspace:*",
@@ -41,6 +42,7 @@
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
     "@types/node": "^22.0.0",
+    "@vercel/ncc": "^0.38.3",
     "typescript": "^5.6.0"
   }
 }
