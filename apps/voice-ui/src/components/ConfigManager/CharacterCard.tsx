@@ -9,7 +9,7 @@ import { InferenceSettings } from './InferenceSettings'
 interface CharacterCardProps {
   character: CharacterConfig
   index: number
-  onUpdate: (index: number, field: keyof CharacterConfig, value: any) => void
+  onUpdate: (index: number, field: keyof CharacterConfig, value: unknown) => void
   onRemove: (index: number) => void
   gptSovitsPath: string
   modelVersion: string
@@ -39,15 +39,15 @@ export function CharacterCard({
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   // 校验函数
-  const validateField = (field: string, value: any): string | undefined => {
+  const validateField = (field: string, value: unknown): string | undefined => {
     switch (field) {
       case 'character_name':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '角色名称是必填项'
         }
         break
       case 'gpt':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return 'GPT 模型路径是必填项'
         }
         if (!character.auto && !value.endsWith('.ckpt')) {
@@ -58,7 +58,7 @@ export function CharacterCard({
         }
         break
       case 'sovits':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return 'SoVITS 模型路径是必填项'
         }
         if (!character.auto && !value.endsWith('.pth')) {
@@ -69,7 +69,7 @@ export function CharacterCard({
         }
         break
       case 'ref_audio':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '参考音频路径是必填项'
         }
         if (!character.auto && !value.match(/\.(wav|mp3|flac)$/i)) {
@@ -80,7 +80,7 @@ export function CharacterCard({
         }
         break
       case 'ref_text':
-        if (!character.auto && (!value || value.trim() === '')) {
+        if (!character.auto && (!value || typeof value !== 'string' || value.trim() === '')) {
           return '非自动模式下，参考文本是必填项'
         }
         break
@@ -103,7 +103,7 @@ export function CharacterCard({
   }
 
   // 处理字段变化
-  const handleFieldChange = (field: keyof ValidationErrors, value: any) => {
+  const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {
     onUpdate(index, field as keyof CharacterConfig, value)
     
     // 如果字段已经被触摸过，立即校验
@@ -155,7 +155,7 @@ export function CharacterCard({
   // 当自动模式改变时重新校验
   useEffect(() => {
     validateAll()
-  }, [character.auto])
+  }, [character.auto, validateAll])
 
   return (
     <div className="border border-gray-200 rounded-lg p-4">

@@ -7,7 +7,7 @@ import { CharacterConfig } from './types'
 interface CharacterSettingsProps {
   characters: CharacterConfig[]
   onAddCharacter: () => void
-  onUpdateCharacter: (index: number, field: keyof CharacterConfig, value: any) => void
+  onUpdateCharacter: (index: number, field: keyof CharacterConfig, value: unknown) => void
   onRemoveCharacter: (index: number) => void
   gptSovitsPath: string
   modelVersion: string

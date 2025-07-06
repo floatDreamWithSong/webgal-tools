@@ -20,7 +20,7 @@ function scanFilesInDirectory(directory: string, extensions: string[], baseDir?:
         const stats = fs.statSync(fullPath)
         isSymlink = stats.isSymbolicLink()
         isDirectory = stats.isDirectory()
-      } catch (err) {
+      } catch {
         // 忽略错误，继续处理
       }
       
@@ -32,8 +32,8 @@ function scanFilesInDirectory(directory: string, extensions: string[], baseDir?:
           const subFiles = scanFilesInDirectory(fullPath, extensions, baseDir)
           logger.debug(`子目录 ${fullPath} 中找到 ${subFiles.length} 个文件`)
           files.push(...subFiles)
-        } catch (err) {
-          logger.error(`无法访问目录 ${fullPath}:`, err)
+        } catch (error) {
+          logger.error(`无法访问目录 ${fullPath}:`, error)
         }
       } else if (entry.isFile()) {
         // 检查文件扩展名

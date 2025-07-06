@@ -25,20 +25,20 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
   const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   // 校验函数
-  const validateField = (field: string, value: any): string | undefined => {
+  const validateField = (field: string, value: unknown): string | undefined => {
     switch (field) {
       case 'prompt_language':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '提示语言是必填项'
         }
         break
       case 'text_language':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '文本语言是必填项'
         }
         break
       case 'how_to_cut':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '切分方式是必填项'
         }
         break
@@ -46,7 +46,8 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
         if (value === undefined || value === null || value === '') {
           return 'top_k 是必填项'
         }
-        if (value < 1 || value > 100) {
+        const topKNum = Number(value)
+        if (isNaN(topKNum) || topKNum < 1 || topKNum > 100) {
           return 'top_k 必须在 1-100 之间'
         }
         break
@@ -54,7 +55,8 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
         if (value === undefined || value === null || value === '') {
           return 'top_p 是必填项'
         }
-        if (value < 0 || value > 1) {
+        const topPNum = Number(value)
+        if (isNaN(topPNum) || topPNum < 0 || topPNum > 1) {
           return 'top_p 必须在 0-1 之间'
         }
         break
@@ -62,7 +64,8 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
         if (value === undefined || value === null || value === '') {
           return 'temperature 是必填项'
         }
-        if (value < 0 || value > 2) {
+        const tempNum = Number(value)
+        if (isNaN(tempNum) || tempNum < 0 || tempNum > 2) {
           return 'temperature 必须在 0-2 之间'
         }
         break
@@ -70,7 +73,8 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
         if (value === undefined || value === null || value === '') {
           return 'speed 是必填项'
         }
-        if (value < 0.1 || value > 5) {
+        const speedNum = Number(value)
+        if (isNaN(speedNum) || speedNum < 0.1 || speedNum > 5) {
           return 'speed 必须在 0.1-5 之间'
         }
         break
@@ -78,7 +82,8 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
         if (value === undefined || value === null || value === '') {
           return 'sample_steps 是必填项'
         }
-        if (value < 1 || value > 50) {
+        const stepsNum = Number(value)
+        if (isNaN(stepsNum) || stepsNum < 1 || stepsNum > 50) {
           return 'sample_steps 必须在 1-50 之间'
         }
         break
@@ -86,7 +91,8 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
         if (value === undefined || value === null || value === '') {
           return 'pause_second 是必填项'
         }
-        if (value < 0 || value > 10) {
+        const pauseNum = Number(value)
+        if (isNaN(pauseNum) || pauseNum < 0 || pauseNum > 10) {
           return 'pause_second 必须在 0-10 之间'
         }
         break
@@ -113,7 +119,7 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
   }
 
   // 处理字段变化
-  const handleFieldChange = (field: keyof ValidationErrors, value: any) => {
+  const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {
     onConfigChange({ [field]: value })
     
     // 如果字段已经被触摸过，立即校验
@@ -145,7 +151,7 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
   // 组件挂载时进行初始校验
   useEffect(() => {
     validateAll()
-  }, [])
+  }, [validateAll])
 
   return (
     <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">

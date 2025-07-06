@@ -124,7 +124,7 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
     emitConfigEvent('character-removed', { character: characterToRemove, index })
   }
 
-  const updateCharacter = (index: number, field: keyof CharacterConfig, value: any) => {
+  const updateCharacter = (index: number, field: keyof CharacterConfig, value: unknown) => {
     setConfig(prev => ({
       ...prev,
       characters: prev.characters.map((char, i) => 

@@ -4,7 +4,7 @@ import { addConfigEventListener, removeConfigEventListener, ConfigEventType, Con
 export function useConfigEvents(
   eventTypes: ConfigEventType[],
   callback: (event: ConfigEvent) => void,
-  deps: any[] = []
+  deps: unknown[] = []
 ) {
   const memoizedCallback = useCallback(callback, deps)
 
@@ -24,21 +24,21 @@ export function useConfigEvents(
 }
 
 // 便捷 Hook，用于监听配置保存事件
-export function useConfigSaved(callback: (event: ConfigEvent) => void, deps: any[] = []) {
+export function useConfigSaved(callback: (event: ConfigEvent) => void, deps: unknown[] = []) {
   useConfigEvents(['config-saved'], callback, deps)
 }
 
 // 便捷 Hook，用于监听配置加载事件
-export function useConfigLoaded(callback: (event: ConfigEvent) => void, deps: any[] = []) {
+export function useConfigLoaded(callback: (event: ConfigEvent) => void, deps: unknown[] = []) {
   useConfigEvents(['config-loaded'], callback, deps)
 }
 
 // 便捷 Hook，用于监听角色相关事件
-export function useCharacterEvents(callback: (event: ConfigEvent) => void, deps: any[] = []) {
+export function useCharacterEvents(callback: (event: ConfigEvent) => void, deps: unknown[] = []) {
   useConfigEvents(['character-added', 'character-removed', 'character-updated'], callback, deps)
 }
 
 // 便捷 Hook，用于监听所有配置相关事件
-export function useAllConfigEvents(callback: (event: ConfigEvent) => void, deps: any[] = []) {
+export function useAllConfigEvents(callback: (event: ConfigEvent) => void, deps: unknown[] = []) {
   useConfigEvents(['config-saved', 'config-loaded', 'character-added', 'character-removed', 'character-updated'], callback, deps)
 } 

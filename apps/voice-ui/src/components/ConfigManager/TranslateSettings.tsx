@@ -20,17 +20,17 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
   const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   // 校验函数
-  const validateField = (field: string, value: any): string | undefined => {
+  const validateField = (field: string, value: unknown): string | undefined => {
     if (!translate.check) return undefined // 如果未启用翻译服务，不进行校验
 
     switch (field) {
       case 'model_type':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '模型服务商是必填项'
         }
         break
       case 'base_url':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '模型 API baseUrl 是必填项'
         }
         if (!value.startsWith('http://') && !value.startsWith('https://')) {
@@ -38,7 +38,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
         }
         break
       case 'model_name':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '模型名称是必填项'
         }
         break
@@ -46,7 +46,8 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
         if (value === undefined || value === null || value === '') {
           return '上下文宽度是必填项'
         }
-        if (value < 0 || value > 10) {
+        const contextSizeNum = Number(value)
+        if (isNaN(contextSizeNum) || contextSizeNum < 0 || contextSizeNum > 10) {
           return '上下文宽度必须在 0-10 之间'
         }
         break
@@ -73,7 +74,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
   }
 
   // 处理字段变化
-  const handleFieldChange = (field: string, value: any) => {
+  const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {
     onTranslateChange({ [field]: value })
     
     // 如果字段已经被触摸过，立即校验
@@ -84,7 +85,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
   }
 
   // 处理字段失焦
-  const handleFieldBlur = (field: string) => {
+  const handleFieldBlur = (field: keyof ValidationErrors) => {
     setTouched(prev => ({ ...prev, [field]: true }))
     const value = translate[field as keyof typeof translate]
     const error = validateField(field, value)
@@ -92,7 +93,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
   }
 
   // 获取字段的 CSS 类
-  const getFieldClassName = (field: string) => {
+  const getFieldClassName = (field: keyof ValidationErrors) => {
     const baseClass = "w-[98%] ml-[1%] px-3 py-2 border rounded-md focus:outline-none focus:ring-2"
     const hasError = touched[field] && errors[field]
     
@@ -105,7 +106,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
   // 当翻译服务启用状态改变时重新校验
   useEffect(() => {
     validateAll()
-  }, [translate.check])
+  }, [translate.check, validateAll])
 
   return (
     <div className="space-y-4 flex-1 overflow-y-auto">

@@ -4,7 +4,7 @@ export type ConfigEventType = 'config-saved' | 'config-loaded' | 'character-adde
 
 export interface ConfigEvent {
   type: ConfigEventType
-  data?: any
+  data?: unknown
   timestamp: number
 }
 
@@ -33,7 +33,7 @@ class EventBus {
   }
 
   // 触发事件
-  emit(eventType: ConfigEventType, data?: any) {
+  emit(eventType: ConfigEventType, data?: unknown) {
     const event: ConfigEvent = {
       type: eventType,
       data,
@@ -82,7 +82,7 @@ class EventBus {
 export const configEventBus = new EventBus()
 
 // 便捷方法
-export const emitConfigEvent = (eventType: ConfigEventType, data?: any) => {
+export const emitConfigEvent = (eventType: ConfigEventType, data?: unknown) => {
   configEventBus.emit(eventType, data)
 }
 

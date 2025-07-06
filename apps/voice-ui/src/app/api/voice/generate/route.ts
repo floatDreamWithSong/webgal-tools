@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs'
 import { startVoiceService } from '@webgal-tools/voice'
-import { updateVoiceTaskStatus } from '../status/route'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 更新任务状态为运行中
-    updateVoiceTaskStatus({
+    global.updateVoiceTaskStatus?.({
       isRunning: true,
       workDir,
       startTime: Date.now(),
@@ -46,7 +45,7 @@ export async function POST(request: NextRequest) {
     })
     
     // 更新任务状态为完成
-    updateVoiceTaskStatus({
+    global.updateVoiceTaskStatus?.({
       isRunning: false,
       endTime: Date.now(),
       progress: 100,
@@ -65,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     // 更新任务状态为失败
-    updateVoiceTaskStatus({
+    global.updateVoiceTaskStatus?.({
       isRunning: false,
       endTime: Date.now(),
       progress: 0,

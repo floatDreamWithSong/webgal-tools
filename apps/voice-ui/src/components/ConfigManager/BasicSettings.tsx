@@ -21,18 +21,19 @@ export function BasicSettings({ config, onConfigChange }: BasicSettingsProps) {
   const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   // 校验函数
-  const validateField = (field: string, value: any): string | undefined => {
+  const validateField = (field: string, value: unknown): string | undefined => {
     switch (field) {
       case 'volume':
         if (value === undefined || value === null || value === '') {
           return '音量是必填项'
         }
-        if (value < 0 || value > 100) {
+        const volumeNum = Number(value)
+        if (isNaN(volumeNum) || volumeNum < 0 || volumeNum > 100) {
           return '音量必须在 0-100 之间'
         }
         break
       case 'gpt_sovits_url':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return 'GPT-SoVITS 服务地址是必填项'
         }
         if (!value.startsWith('http://') && !value.startsWith('https://')) {
@@ -40,12 +41,12 @@ export function BasicSettings({ config, onConfigChange }: BasicSettingsProps) {
         }
         break
       case 'gpt_sovits_path':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return 'GPT-SoVITS 项目路径是必填项'
         }
         break
       case 'model_version':
-        if (!value || value.trim() === '') {
+        if (!value || typeof value !== 'string' || value.trim() === '') {
           return '模型版本是必填项'
         }
         break
@@ -53,7 +54,8 @@ export function BasicSettings({ config, onConfigChange }: BasicSettingsProps) {
         if (value === undefined || value === null || value === '') {
           return '最大翻译并发数是必填项'
         }
-        if (value < 1 || value > 10) {
+        const translatorNum = Number(value)
+        if (isNaN(translatorNum) || translatorNum < 1 || translatorNum > 10) {
           return '最大翻译并发数必须在 1-10 之间'
         }
         break
@@ -76,7 +78,7 @@ export function BasicSettings({ config, onConfigChange }: BasicSettingsProps) {
   }
 
   // 处理字段变化
-  const handleFieldChange = (field: keyof ValidationErrors, value: any) => {
+  const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {
     onConfigChange({ [field]: value })
     
     // 如果字段已经被触摸过，立即校验
@@ -108,7 +110,7 @@ export function BasicSettings({ config, onConfigChange }: BasicSettingsProps) {
   // 组件挂载时进行初始校验
   useEffect(() => {
     validateAll()
-  }, [])
+  }, [validateAll])
 
   return (
     <div className="space-y-4 flex-1">
