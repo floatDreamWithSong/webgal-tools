@@ -140,10 +140,10 @@ export default function Home() {
                 {history.length > 0 && (
                   <button
                     onClick={clearHistory}
-                    className="text-sm text-gray-500 hover:text-red-600"
+                    className="text-sm text-gray-500 hover:text-red-600 cursor-pointer hover:bg-red-500/20 rounded-full p-1"
                     title="清空历史"
                   >
-                    🗑️
+                    🗑️清空
                   </button>
                 )}
               </div>

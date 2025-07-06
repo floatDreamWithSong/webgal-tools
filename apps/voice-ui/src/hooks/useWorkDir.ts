@@ -114,7 +114,7 @@ export function useWorkDir(): UseWorkDirReturn {
   // 添加已验证的工作目录（不验证，假设已经验证过了）
   const addValidatedWorkDir = useCallback(async (path: string): Promise<boolean> => {
     const normalizedPath = path.replace(/\\/g, '/')
-    const name = normalizedPath.split('/').pop() || normalizedPath
+    const name = normalizedPath.split('/')[normalizedPath.split('/').length - 2] || normalizedPath
     const now = Date.now()
 
     setHistory(prevHistory => {

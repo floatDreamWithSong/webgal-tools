@@ -115,8 +115,8 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-sm text-gray-600">当前项目</div>
-                <div className="text-xs text-gray-500 truncate max-w-xs" title={workDir || ''}>
-                  {workDir || 'Unknown'}
+                <div className="text-xs text-gray-500 truncate max-w-xs" title={workDir?.split('/')[workDir?.split('/').length - 2] || ''}>
+                  {workDir?.split('/')[workDir?.split('/').length - 2] || 'Unknown'}
                 </div>
               </div>
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
