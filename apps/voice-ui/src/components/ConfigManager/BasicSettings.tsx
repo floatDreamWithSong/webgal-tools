@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { VoiceConfig } from './types'
 
 interface BasicSettingsProps {
@@ -64,18 +64,16 @@ export function BasicSettings({ config, onConfigChange }: BasicSettingsProps) {
   }
 
   // 校验所有字段
-  const validateAll = () => {
-    const newErrors: ValidationErrors = {}
-    
-    newErrors.volume = validateField('volume', config.volume)
-    newErrors.gpt_sovits_url = validateField('gpt_sovits_url', config.gpt_sovits_url)
-    newErrors.gpt_sovits_path = validateField('gpt_sovits_path', config.gpt_sovits_path)
-    newErrors.model_version = validateField('model_version', config.model_version)
-    newErrors.max_translator = validateField('max_translator', config.max_translator || 1)
-    
-    setErrors(newErrors)
-    return Object.values(newErrors).every(error => !error)
-  }
+  const validateAll = useCallback(() => {
+    const newErrors: ValidationErrors = {};
+    newErrors.volume = validateField('volume', config.volume);
+    newErrors.gpt_sovits_url = validateField('gpt_sovits_url', config.gpt_sovits_url);
+    newErrors.gpt_sovits_path = validateField('gpt_sovits_path', config.gpt_sovits_path);
+    newErrors.model_version = validateField('model_version', config.model_version);
+    newErrors.max_translator = validateField('max_translator', config.max_translator || 1);
+    setErrors(newErrors);
+    return Object.values(newErrors).every(error => !error);
+  }, [config]);
 
   // 处理字段变化
   const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {

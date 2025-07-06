@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { CharacterConfig } from './types'
 import { FileUpload } from './FileUpload'
 import { ModelScanner } from './ModelScanner'
@@ -89,18 +89,16 @@ export function CharacterCard({
   }
 
   // 校验所有字段
-  const validateAll = () => {
-    const newErrors: ValidationErrors = {}
-    
-    newErrors.character_name = validateField('character_name', character.character_name)
-    newErrors.gpt = validateField('gpt', character.gpt)
-    newErrors.sovits = validateField('sovits', character.sovits)
-    newErrors.ref_audio = validateField('ref_audio', character.ref_audio)
-    newErrors.ref_text = validateField('ref_text', character.ref_text)
-    
-    setErrors(newErrors)
-    return Object.values(newErrors).every(error => !error)
-  }
+  const validateAll = useCallback(() => {
+    const newErrors: ValidationErrors = {};
+    newErrors.character_name = validateField('character_name', character.character_name);
+    newErrors.gpt = validateField('gpt', character.gpt);
+    newErrors.sovits = validateField('sovits', character.sovits);
+    newErrors.ref_audio = validateField('ref_audio', character.ref_audio);
+    newErrors.ref_text = validateField('ref_text', character.ref_text);
+    setErrors(newErrors);
+    return Object.values(newErrors).every(error => !error);
+  }, [character]);
 
   // 处理字段变化
   const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {

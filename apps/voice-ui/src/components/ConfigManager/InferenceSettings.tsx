@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { InferrenceConfig } from './types'
 
 interface InferenceSettingsProps {
@@ -101,22 +101,20 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
   }
 
   // 校验所有字段
-  const validateAll = () => {
-    const newErrors: ValidationErrors = {}
-    
-    newErrors.prompt_language = validateField('prompt_language', config.prompt_language)
-    newErrors.text_language = validateField('text_language', config.text_language)
-    newErrors.how_to_cut = validateField('how_to_cut', config.how_to_cut)
-    newErrors.top_k = validateField('top_k', config.top_k)
-    newErrors.top_p = validateField('top_p', config.top_p)
-    newErrors.temperature = validateField('temperature', config.temperature)
-    newErrors.speed = validateField('speed', config.speed)
-    newErrors.sample_steps = validateField('sample_steps', config.sample_steps)
-    newErrors.pause_second = validateField('pause_second', config.pause_second)
-    
-    setErrors(newErrors)
-    return Object.values(newErrors).every(error => !error)
-  }
+  const validateAll = useCallback(() => {
+    const newErrors: ValidationErrors = {};
+    newErrors.prompt_language = validateField('prompt_language', config.prompt_language);
+    newErrors.text_language = validateField('text_language', config.text_language);
+    newErrors.how_to_cut = validateField('how_to_cut', config.how_to_cut);
+    newErrors.top_k = validateField('top_k', config.top_k);
+    newErrors.top_p = validateField('top_p', config.top_p);
+    newErrors.temperature = validateField('temperature', config.temperature);
+    newErrors.speed = validateField('speed', config.speed);
+    newErrors.sample_steps = validateField('sample_steps', config.sample_steps);
+    newErrors.pause_second = validateField('pause_second', config.pause_second);
+    setErrors(newErrors);
+    return Object.values(newErrors).every(error => !error);
+  }, [config]);
 
   // 处理字段变化
   const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {

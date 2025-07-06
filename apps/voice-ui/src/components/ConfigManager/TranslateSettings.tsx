@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TranslateConfig } from './types'
 
 interface TranslateSettingsProps {
@@ -56,22 +56,19 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
   }
 
   // 校验所有字段
-  const validateAll = () => {
+  const validateAll = useCallback(() => {
     if (!translate.check) {
-      setErrors({})
-      return true
+      setErrors({});
+      return true;
     }
-
-    const newErrors: ValidationErrors = {}
-    
-    newErrors.model_type = validateField('model_type', translate.model_type)
-    newErrors.base_url = validateField('base_url', translate.base_url)
-    newErrors.model_name = validateField('model_name', translate.model_name)
-    newErrors.context_size = validateField('context_size', translate.context_size)
-    
-    setErrors(newErrors)
-    return Object.values(newErrors).every(error => !error)
-  }
+    const newErrors: ValidationErrors = {};
+    newErrors.model_type = validateField('model_type', translate.model_type);
+    newErrors.base_url = validateField('base_url', translate.base_url);
+    newErrors.model_name = validateField('model_name', translate.model_name);
+    newErrors.context_size = validateField('context_size', translate.context_size);
+    setErrors(newErrors);
+    return Object.values(newErrors).every(error => !error);
+  }, [translate]);
 
   // 处理字段变化
   const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {
