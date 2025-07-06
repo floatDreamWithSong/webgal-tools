@@ -6,6 +6,7 @@ import { BasicSettings } from './BasicSettings'
 import { TranslateSettings } from './TranslateSettings'
 import { CharacterSettings } from './CharacterSettings'
 import { VoiceConfig, CharacterConfig } from './types'
+import { emitConfigEvent } from './eventBus'
 
 interface ConfigManagerProps {
   workDir: string | null
@@ -42,6 +43,7 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
       if (response.ok) {
         const data = await response.json()
         setConfig(data)
+        emitConfigEvent('config-loaded', { workDir, config: data })
       }
     } catch (error) {
       console.error('加载配置失败:', error)
@@ -72,6 +74,7 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
       if (response.ok) {
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)
+        emitConfigEvent('config-saved', { workDir, config })
       } else {
         throw new Error('保存失败')
       }
@@ -102,29 +105,33 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
         speed: 1.0,
         sample_steps: 8,
         if_sr: false,
-        pause_second: 0.2
+        pause_second: 0.5
       }
     }
     setConfig(prev => ({
       ...prev,
       characters: [...prev.characters, newCharacter]
     }))
+    emitConfigEvent('character-added', { character: newCharacter, index: config.characters.length })
   }
 
   const removeCharacter = (index: number) => {
+    const characterToRemove = config.characters[index]
     setConfig(prev => ({
       ...prev,
       characters: prev.characters.filter((_, i) => i !== index)
     }))
+    emitConfigEvent('character-removed', { character: characterToRemove, index })
   }
 
-  const updateCharacter = (index: number, field: keyof CharacterConfig, value: string | number | boolean) => {
+  const updateCharacter = (index: number, field: keyof CharacterConfig, value: any) => {
     setConfig(prev => ({
       ...prev,
       characters: prev.characters.map((char, i) => 
         i === index ? { ...char, [field]: value } : char
       )
     }))
+    emitConfigEvent('character-updated', { index, field, value })
   }
 
   if (!workDir) {
@@ -147,49 +154,62 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
   }
 
   return (
-    <div className="h-full flex flex-col space-y-4 overflow-y-auto">
+    <div className="h-full flex flex-col">
       <ConfigNavigation 
         activeSection={activeSection}
         onSectionChange={setActiveSection}
       />
 
-      {activeSection === 'basic' && (
-        <BasicSettings 
-          config={config}
-          onConfigChange={(updates) => setConfig(prev => ({ ...prev, ...updates }))}
-        />
-      )}
+      <div className="flex-1 overflow-hidden">
+        {activeSection === 'basic' && (
+          <div className="h-full overflow-y-auto p-4">
+            <BasicSettings 
+              config={config}
+              onConfigChange={(updates) => setConfig(prev => ({ ...prev, ...updates }))}
+            />
+          </div>
+        )}
 
-      {activeSection === 'translate' && config.translate && (
-        <TranslateSettings 
-          translate={config.translate}
-          onTranslateChange={(updates) => setConfig(prev => ({
-            ...prev,
-            translate: prev.translate ? { ...prev.translate, ...updates } : undefined
-          }))}
-        />
-      )}
+        {activeSection === 'translate' && config.translate && (
+          <div className="h-full overflow-y-auto p-4">
+            <TranslateSettings 
+              translate={config.translate}
+              onTranslateChange={(updates) => setConfig(prev => ({
+                ...prev,
+                translate: prev.translate ? { ...prev.translate, ...updates } : undefined
+              }))}
+            />
+          </div>
+        )}
 
-      {activeSection === 'characters' && (
-        <CharacterSettings 
-          characters={config.characters}
-          onAddCharacter={addCharacter}
-          onUpdateCharacter={updateCharacter}
-          onRemoveCharacter={removeCharacter}
-        />
-      )}
+        {activeSection === 'characters' && (
+          <CharacterSettings 
+            characters={config.characters}
+            onAddCharacter={addCharacter}
+            onUpdateCharacter={updateCharacter}
+            onRemoveCharacter={removeCharacter}
+            gptSovitsPath={config.gpt_sovits_path}
+            modelVersion={config.model_version}
+            onSave={saveConfig}
+            loading={loading}
+            saved={saved}
+          />
+        )}
 
-      <div className="flex items-center space-x-4 flex-shrink-0">
-        <button
-          onClick={saveConfig}
-          disabled={loading}
-          className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-medium text-sm"
-        >
-          {loading ? '保存中...' : '保存配置'}
-        </button>
-        {saved && (
-          <div className="text-green-600 text-sm">
-            配置已保存成功！
+        {activeSection !== 'characters' && (
+          <div className="flex items-center space-x-4 flex-shrink-0 p-4">
+            <button
+              onClick={saveConfig}
+              disabled={loading}
+              className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-md font-medium text-sm"
+            >
+              {loading ? '保存中...' : '保存配置'}
+            </button>
+            {saved && (
+              <div className="text-green-600 text-sm">
+                配置已保存成功！
+              </div>
+            )}
           </div>
         )}
       </div>

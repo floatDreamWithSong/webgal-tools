@@ -159,6 +159,9 @@ importers:
       '@webgal-tools/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@webgal-tools/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@webgal-tools/voice':
         specifier: workspace:*
         version: link:../voice

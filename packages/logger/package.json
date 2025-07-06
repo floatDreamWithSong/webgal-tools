@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/logger",
-  "version": "1.6.10",
+  "version": "1.7.0",
   "description": "统一的日志记录服务",
   "type": "module",
   "main": "dist/index.js",

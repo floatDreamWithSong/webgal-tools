@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { TranslateConfig } from './types'
 
 interface TranslateSettingsProps {
@@ -7,7 +8,105 @@ interface TranslateSettingsProps {
   onTranslateChange: (updates: Partial<TranslateConfig>) => void
 }
 
+interface ValidationErrors {
+  model_type?: string
+  base_url?: string
+  model_name?: string
+  context_size?: string
+}
+
 export function TranslateSettings({ translate, onTranslateChange }: TranslateSettingsProps) {
+  const [errors, setErrors] = useState<ValidationErrors>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+
+  // 校验函数
+  const validateField = (field: string, value: any): string | undefined => {
+    if (!translate.check) return undefined // 如果未启用翻译服务，不进行校验
+
+    switch (field) {
+      case 'model_type':
+        if (!value || value.trim() === '') {
+          return '模型服务商是必填项'
+        }
+        break
+      case 'base_url':
+        if (!value || value.trim() === '') {
+          return '模型 API baseUrl 是必填项'
+        }
+        if (!value.startsWith('http://') && !value.startsWith('https://')) {
+          return '请输入有效的 URL 地址'
+        }
+        break
+      case 'model_name':
+        if (!value || value.trim() === '') {
+          return '模型名称是必填项'
+        }
+        break
+      case 'context_size':
+        if (value === undefined || value === null || value === '') {
+          return '上下文宽度是必填项'
+        }
+        if (value < 0 || value > 10) {
+          return '上下文宽度必须在 0-10 之间'
+        }
+        break
+    }
+    return undefined
+  }
+
+  // 校验所有字段
+  const validateAll = () => {
+    if (!translate.check) {
+      setErrors({})
+      return true
+    }
+
+    const newErrors: ValidationErrors = {}
+    
+    newErrors.model_type = validateField('model_type', translate.model_type)
+    newErrors.base_url = validateField('base_url', translate.base_url)
+    newErrors.model_name = validateField('model_name', translate.model_name)
+    newErrors.context_size = validateField('context_size', translate.context_size)
+    
+    setErrors(newErrors)
+    return Object.values(newErrors).every(error => !error)
+  }
+
+  // 处理字段变化
+  const handleFieldChange = (field: string, value: any) => {
+    onTranslateChange({ [field]: value })
+    
+    // 如果字段已经被触摸过，立即校验
+    if (touched[field]) {
+      const error = validateField(field, value)
+      setErrors(prev => ({ ...prev, [field]: error }))
+    }
+  }
+
+  // 处理字段失焦
+  const handleFieldBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+    const value = translate[field as keyof typeof translate]
+    const error = validateField(field, value)
+    setErrors(prev => ({ ...prev, [field]: error }))
+  }
+
+  // 获取字段的 CSS 类
+  const getFieldClassName = (field: string) => {
+    const baseClass = "w-[98%] ml-[1%] px-3 py-2 border rounded-md focus:outline-none focus:ring-2"
+    const hasError = touched[field] && errors[field]
+    
+    if (hasError) {
+      return `${baseClass} border-red-500 focus:ring-red-500`
+    }
+    return `${baseClass} border-gray-300 focus:ring-blue-500`
+  }
+
+  // 当翻译服务启用状态改变时重新校验
+  useEffect(() => {
+    validateAll()
+  }, [translate.check])
+
   return (
     <div className="space-y-4 flex-1 overflow-y-auto">
       <div className="flex items-center space-x-2">
@@ -28,15 +127,15 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                模型服务商
+                模型服务商 <span className="text-red-500">*</span>
               </label>
               <select
                 value={translate.model_type}
-                onChange={(e) => onTranslateChange({ 
-                  model_type: e.target.value as TranslateConfig['model_type']
-                })}
-                className="w-[98%] ml-[1%] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handleFieldChange('model_type', e.target.value)}
+                onBlur={() => handleFieldBlur('model_type')}
+                className={getFieldClassName('model_type')}
               >
+                <option value="">请选择模型服务商</option>
                 <option value="ollama">Ollama</option>
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
@@ -45,31 +144,45 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
                 <option value="cohere">Cohere</option>
                 <option value="custom">Custom</option>
               </select>
+              {touched.model_type && errors.model_type && (
+                <p className="mt-1 text-sm text-red-600">{errors.model_type}</p>
+              )}
             </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                模型 API baseUrl
+                模型 API baseUrl <span className="text-red-500">*</span>
               </label>
               <input
                 type="url"
                 value={translate.base_url}
-                onChange={(e) => onTranslateChange({ base_url: e.target.value })}
-                className="w-[98%] ml-[1%] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handleFieldChange('base_url', e.target.value)}
+                onBlur={() => handleFieldBlur('base_url')}
+                className={getFieldClassName('base_url')}
                 placeholder="http://localhost:11434/api"
               />
+              {touched.base_url && errors.base_url && (
+                <p className="mt-1 text-sm text-red-600">{errors.base_url}</p>
+              )}
             </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                模型名称
+                模型名称 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={translate.model_name}
-                onChange={(e) => onTranslateChange({ model_name: e.target.value })}
-                className="w-[98%] ml-[1%] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handleFieldChange('model_name', e.target.value)}
+                onBlur={() => handleFieldBlur('model_name')}
+                className={getFieldClassName('model_name')}
                 placeholder="glm4:9b"
               />
+              {touched.model_name && errors.model_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.model_name}</p>
+              )}
             </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 API 密钥（本地Ollama服务可不填）
@@ -82,20 +195,26 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
                 placeholder="留空如果不需要"
               />
             </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                上下文宽度（行）
+                上下文宽度（行） <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 min="0"
                 max="10"
                 value={translate.context_size}
-                onChange={(e) => onTranslateChange({ context_size: parseInt(e.target.value) })}
-                className="w-[98%] ml-[1%] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handleFieldChange('context_size', parseInt(e.target.value) || 0)}
+                onBlur={() => handleFieldBlur('context_size')}
+                className={getFieldClassName('context_size')}
               />
+              {touched.context_size && errors.context_size && (
+                <p className="mt-1 text-sm text-red-600">{errors.context_size}</p>
+              )}
             </div>
           </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               额外全局提示词

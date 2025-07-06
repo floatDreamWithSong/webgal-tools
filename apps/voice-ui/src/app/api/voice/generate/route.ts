@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs'
 import { startVoiceService } from '@webgal-tools/voice'
+import { updateVoiceTaskStatus } from '../status/route'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +23,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '脚本文件不存在' }, { status: 400 })
     }
     
+    // 更新任务状态为运行中
+    updateVoiceTaskStatus({
+      isRunning: true,
+      workDir,
+      startTime: Date.now(),
+      progress: 0,
+      message: '正在启动语音生成任务...'
+    })
+    
     // 处理脚本文件路径：去除scene前缀
     let processedScriptFile = scriptFile
     if (scriptFile.startsWith('scene/')) {
@@ -35,6 +45,14 @@ export async function POST(request: NextRequest) {
       forceMode
     })
     
+    // 更新任务状态为完成
+    updateVoiceTaskStatus({
+      isRunning: false,
+      endTime: Date.now(),
+      progress: 100,
+      message: result.success ? '语音生成完成' : '语音生成失败'
+    })
+    
     if (result.success) {
       return NextResponse.json({ 
         success: true, 
@@ -46,6 +64,14 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
   } catch (error) {
+    // 更新任务状态为失败
+    updateVoiceTaskStatus({
+      isRunning: false,
+      endTime: Date.now(),
+      progress: 0,
+      message: '语音生成失败'
+    })
+    
     console.error('语音生成失败:', error)
     return NextResponse.json({ 
       error: '语音生成失败',

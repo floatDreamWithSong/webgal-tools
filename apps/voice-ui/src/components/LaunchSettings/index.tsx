@@ -36,27 +36,34 @@ export function LaunchSettings({ workDir }: LaunchSettingsProps) {
   // 检查任务状态
   const checkTaskStatus = useCallback(async () => {
     try {
-      const response = await fetch('/api/voice/generate')
+      const response = await fetch(`/api/voice/status?workDir=${encodeURIComponent(workDir || '')}`)
       if (response.ok) {
         const data = await response.json()
         if (!data.isRunning && taskStatus.isRunning) {
           setTaskStatus({
             isRunning: false,
-            progress: 100,
-            message: '任务结束'
+            progress: data.progress || 100,
+            message: data.message || '任务结束'
           })
         } else if (data.isRunning && !taskStatus.isRunning) {
           setTaskStatus({
             isRunning: true,
-            progress: 0,
-            message: '任务执行中...'
+            progress: data.progress || 0,
+            message: data.message || '任务执行中...'
           })
+        } else if (data.isRunning && taskStatus.isRunning) {
+          // 更新进度和消息
+          setTaskStatus(prev => ({
+            ...prev,
+            progress: data.progress || prev.progress,
+            message: data.message || prev.message
+          }))
         }
       }
     } catch (error) {
       console.error('检查任务状态失败:', error)
     }
-  }, [taskStatus.isRunning])
+  }, [taskStatus.isRunning, workDir])
 
   // 定期检查任务状态
   useEffect(() => {
@@ -238,11 +245,8 @@ export function LaunchSettings({ workDir }: LaunchSettingsProps) {
       })
       
       if (response.ok) {
-        setTaskStatus({
-          isRunning: true,
-          progress: 0,
-          message: '任务已启动，正在执行...'
-        })
+        // 任务启动成功，状态会通过轮询更新
+        // 这里不需要立即更新状态，因为后端会更新全局状态
       } else {
         const error = await response.json()
         setTaskStatus({
