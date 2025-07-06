@@ -10,6 +10,11 @@ import { ScannedModelFiles, EmotionRecognitionResult } from '@webgal-tools/confi
 import { logger } from '@webgal-tools/logger';
 import path from 'node:path';
 
+// 导出新的接口和实现
+export * from './interface.js';
+export * from './implementations.js';
+export * from './factory.js';
+
 /**
  * 角色语言特色配置存储
  */
@@ -133,40 +138,38 @@ export class TranslateService {
   ): string {
     const characterStyle = this.getCharacterStyle(character);
     
-    let prompt = `你是一个专业的翻译助手，专门负责将游戏对话翻译成${targetLanguage}。
+    let prompt = `你是一位专业的游戏翻译专家，任务是将游戏对话精准地翻译成${targetLanguage}。
 
-翻译规则：
-1. 只输出翻译目标句子被翻译后的内容，不要包含任何解释、注释或额外文字，错误示例: “你好！（nihao!）”
-2. 保持原文的情感色彩和语气，不要修改目标语句的意思。错误示例：“你好!” -> “こんにちは、元気ですか？” 正确示例： “你好!” -> “こんにちは!”
-3. 翻译要自然流畅，符合${targetLanguage}的表达习惯
-4. 用户如果提供了信息，则一定要遵守用户的意思：
-示例： 用户提示：若叶（わかば）睦（むつみ）
-用户目标： 若叶同学?
-分析：这里直接叫同学的姓，说明并不是很亲近的人，应该使用さん来保证礼貌
-用户提供了若叶（わかば），最终翻译为：わかばさん?
+## 翻译目标
+将 <待翻译文本> 的内容翻译成${targetLanguage}。
+
+## 核心翻译准则
+1.  **纯净输出**：只返回翻译后的文本，不包含任何原文、解释、注释或额外符号。
+    -   错误示例：\`你好！（Hello!）\`
+    -   正确示例：\`Hello!\`
+2.  **忠实原文**：保持原文的语气、情感和风格。不要添加或删减信息。
+    -   原文：“你好!”
+    -   错误翻译：“你好吗?”
+    -   正确翻译：“Hello!”
+3.  **流畅自然**：译文需符合${targetLanguage}的语言习惯。
+4.  **遵循角色设定**：严格遵守提供的角色信息和语言风格。
+5.  **参考示例**:
+    - 用户提示: 若叶（わかば）睦（むつみ）
+    - 用户目标: 若叶同学?
+    - 分析: 这里直接叫同学的姓，说明并不是很亲近的人，应该使用さん来保证礼貌
+    - 最终翻译: わかばさん?
+
+## 背景信息
+-   **当前说话角色**: ${character}
+-   **角色语言风格**: ${characterStyle}
+${context ? `-   **对话上下文**: \n${context}\n` : ''}
+${globalPrompt ? `
+## 全局翻译指南
+${globalPrompt}
+` : ''}
+## 待翻译文本
+${text}
 `;
-
-    // 添加角色信息
-    prompt += `\n\n
-- 正在说话的人：${character}
-`;
-
-    // 添加角色特定的提示词
-    if (characterPrompt) {
-      prompt += `\n- 说话的人的专属说明：${characterPrompt}`;
-    }
-
-    // 添加全局提示词
-    if (globalPrompt) {
-      prompt += `\n\n全局翻译指导：\n${globalPrompt}`;
-    }
-
-    // 添加上下文信息
-    if (context) {
-      prompt += `\n\n上下文信息：\n${context}`;
-    }
-
-    prompt += `\n\n请翻译以下文本：\n${text}`;
     logger.debug(prompt)
     return prompt;
   }
@@ -183,90 +186,58 @@ export class TranslateService {
     globalPrompt?: string,
     characterPrompt?: string
   ): string {
-    let prompt = `你是一个专业的翻译和语音模型选择助手。
+    const characterStyle = this.getCharacterStyle(character);
 
-任务说明：
-1. 将文本翻译成${targetLanguage}
-2. 分析对话内容的情绪和语调
-3. 从可用的模型文件中选择最合适的组合
-4. 返回JSON格式的结果
+    let prompt = `你是一位专业的AI语音生成助手。你的任务是分析一段游戏对话，将其翻译成${targetLanguage}，然后根据对话内容和情感，从提供的文件列表中选择最合适的语音模型来生成音频。
 
-可用的模型文件：
-`;
+## 任务流程
+1.  **分析**: 理解 <待处理文本> 的内容、上下文和情感。
+2.  **翻译**: 将文本翻译成${targetLanguage}。
+3.  **选择**: 从 <可用模型文件> 列表中，为翻译后的文本选择最匹配的 \`gpt\`、\`sovits\` 和 \`ref_audio\` 文件。
+4.  **输出**: 以一个完整的JSON对象的形式返回结果，不要有任何其他多余的文字。
 
-    // 添加可用的GPT模型文件
-    if (scannedFiles.gpt_files.length > 0) {
-      prompt += `\nGPT模型文件:\n`;
-      for (const file of scannedFiles.gpt_files) {
-        prompt += `- ${file}\n`;
-      }
-    }
+## 可用模型文件
+### GPT 模型 (.ckpt)
+${scannedFiles.gpt_files.map(f => `- \`${f}\``).join('\n') || '无'}
 
-    // 添加可用的SoVITS模型文件
-    if (scannedFiles.sovits_files.length > 0) {
-      prompt += `\nSoVITS模型文件:\n`;
-      for (const file of scannedFiles.sovits_files) {
-        prompt += `- ${file}\n`;
-      }
-    }
+### SoVITS 模型 (.pth)
+${scannedFiles.sovits_files.map(f => `- \`${f}\``).join('\n') || '无'}
 
-    // 添加可用的参考音频文件
-    if (scannedFiles.ref_audio_files.length > 0) {
-      prompt += `\n参考音频文件:\n`;
-      for (const file of scannedFiles.ref_audio_files) {
-        prompt += `- ${file}\n`;
-      }
-    }
+### 参考音频
+${scannedFiles.ref_audio_files.map(f => `- \`${f}\``).join('\n') || '无'}
 
-    // 添加角色信息
-    prompt += `\n\n角色信息：
-- 正在说话的人：${character}
-`;
+## 背景信息
+-   **当前说话角色**: ${character}
+-   **角色语言风格**: ${characterStyle}
+${context ? `-   **对话上下文**: \n${context}\n` : ''}
+${globalPrompt ? `
+## 全局翻译与选择指南
+${globalPrompt}
+` : ''}
+## 模型选择逻辑
+-   **情感匹配**: 分析文本情感（如：开心、悲伤、愤怒、惊讶、中性），选择文件名中最能体现该情感的模型。
+-   **内容匹配**: 如果文件名包含场景或状态信息，请匹配文本内容。
+-   **备用方案**: 如果没有明显匹配项，选择一个文件名看起来最通用、最中性的模型。
+-   **示例分析**:
+    -   "要一起吃午饭吗？" -> 情绪: 中性, 日常。可选择通用模型。
+    -   "我的外卖被偷了..." -> 情绪: 悲伤, 沮丧。应选择带有 "sad" 或 "sorrow" 等字样的模型。
+    -   "谁敢这么欺负咱们老大！" -> 情绪: 愤怒, 激动。应选择带有 "angry" 或 "rage" 等字样的模型。
 
-    // 添加角色特定的提示词
-    if (characterPrompt) {
-      prompt += `\n- 说话的人的专属说明：${characterPrompt}`;
-    }
-
-    // 添加全局提示词
-    if (globalPrompt) {
-      prompt += `\n\n全局翻译指导：\n${globalPrompt}`;
-    }
-
-    // 添加上下文信息
-    if (context) {
-      prompt += `\n\n上下文信息：\n${context}`;
-    }
-
-    prompt += `\n\n请翻译以下文本，并根据文本内容选择最合适的模型文件：
+## 待处理文本
 "${text}"
 
-返回格式（必须是有效的JSON）：
+## 输出格式
+请严格按照以下JSON格式返回，确保它是一个有效的JSON对象，并放置在json代码块中：
+\`\`\`json
 {
-  "gpt": "选择的GPT模型文件路径（必须是.ckpt文件）",
-  "sovits": "选择的SoVITS模型文件路径（必须是.pth文件）", 
-  "ref_audio": "选择的参考音频文件路径",
+  "gpt": "从列表中选择的 .ckpt 文件路径",
+  "sovits": "从列表中选择的 .pth 文件路径",
+  "ref_audio": "从列表中选择的参考音频路径",
   "translated_text": "翻译后的文本",
-  "emotion": "描述这段对话的情绪特征"
+  "emotion": "对所分析文本情绪的简短描述（例如：开心）"
 }
-
-注意：
-1. 必须返回有效的JSON格式
-2. 根据对话内容的实际情感色彩选择模型文件
- - 示例情绪分析：
- 喵梦: 祥子，要一起吃午饭吗？ ; // 中性，日常对话
-祥子: 我的外卖被偷了... ; // 人物遭受悲伤的事件，伤心
-喵梦: 哈？谁敢这么欺负咱们老大！我一定绕不了他！; (生气，愤怒)
-祥子: 喵梦，你太让我感动了 ; // （激动，惊讶，开心）
-喵梦: 嘿嘿，祥子同学太让人喜欢了! ; （开心）
-
-3. 翻译要自然流畅，符合${targetLanguage}的表达习惯
-4. 文件名可能包含情绪、角色状态等信息，请根据文件名和对话内容进行匹配
-5. 如果不确定，可以选择看起来最通用或最中性的文件
-6. 路径格式说明：请严格按照上面提供的文件路径进行选择，不要修改路径格式
-7. 如果找不到完全匹配的文件，请选择文件名最相似的文件
-8. 字段名必须准确：使用"sovits"而不是"sovit"
-9. 文件扩展名必须准确：GPT文件必须是.ckpt，SoVITS文件必须是.pth`;
+\`\`\`
+`;
 
     logger.debug(prompt);
     return prompt;

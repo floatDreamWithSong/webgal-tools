@@ -1,29 +1,41 @@
 {
   "name": "@webgal-tools/voice-ui",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.6.7",
+  "description": "WebGAL 语音合成 Web UI",
+  "type": "module",
+  "files": [
+    ".next/**/*",
+    "public/**/*",
+    "next.config.ts",
+    "postcss.config.mjs",
+    "tailwind.config.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.3.5",
+    "@webgal-tools/config": "workspace:*",
     "@webgal-tools/voice": "workspace:*",
-    "@webgal-tools/config": "workspace:*"
+    "next": "^15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

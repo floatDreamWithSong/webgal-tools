@@ -2,31 +2,14 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
-    if (global.currentVoiceTask) {
-      // 停止当前任务
-      if (global.currentVoiceTask.wrapper) {
-        try {
-          await global.currentVoiceTask.wrapper.stop()
-        } catch (error) {
-          console.error('停止任务失败:', error)
-        }
-      }
-      
-      // 清理全局任务状态
-      global.currentVoiceTask = null
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: '任务已停止' 
-      })
-    } else {
-      return NextResponse.json({ 
-        success: false, 
-        message: '没有正在运行的任务' 
-      })
-    }
+    // 由于现在使用同步调用，不再需要复杂的任务管理
+    // 这个接口保留用于向后兼容，但实际功能已简化
+    return NextResponse.json({ 
+      success: true, 
+      message: '语音生成任务已完成或不存在' 
+    })
   } catch (error) {
-    console.error('停止任务失败:', error)
-    return NextResponse.json({ error: '停止任务失败' }, { status: 500 })
+    console.error('处理停止请求失败:', error)
+    return NextResponse.json({ error: '处理请求失败' }, { status: 500 })
   }
 } 

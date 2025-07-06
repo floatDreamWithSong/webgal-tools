@@ -134,24 +134,28 @@ export class VoiceConfigManager {
         throw new Error(`${prefix} 缺少 character_name`);
       }
       
-      // 验证auto模式配置
-      const isAutoMode = character.auto === true;
+      // 检查是否需要情绪识别
+      const needsEmotionRecognition = character.auto === true;
       
       if (!character.gpt) {
         throw new Error(`${prefix} 缺少 gpt 模型路径`);
       }
       
-      if (isAutoMode) {
-        // 自动模式：验证文件夹路径
+      if (needsEmotionRecognition) {
+        // 情绪识别模式：验证扫描目录存在
         const gptDir = path.resolve(config.gpt_sovits_path, character.gpt);
         if (!fs.existsSync(gptDir) || !fs.statSync(gptDir).isDirectory()) {
-          throw new Error(`${prefix} GPT模型文件夹不存在或不是目录: ${gptDir}`);
+          throw new Error(`${prefix} GPT模型扫描目录不存在或不是目录: ${gptDir}`);
         }
       } else {
-        // 非自动模式：验证文件路径
+        // 非情绪识别模式：验证具体文件存在
         const gptPath = path.resolve(config.gpt_sovits_path, character.gpt);
         if (!fs.existsSync(gptPath)) {
           throw new Error(`${prefix} GPT模型文件不存在: ${gptPath}`);
+        }
+        // 检查文件扩展名
+        if (!gptPath.endsWith('.ckpt')) {
+          throw new Error(`${prefix} GPT模型文件必须以 .ckpt 结尾: ${gptPath}`);
         }
       }
       
@@ -159,17 +163,21 @@ export class VoiceConfigManager {
         throw new Error(`${prefix} 缺少 sovits 模型路径`);
       }
       
-      if (isAutoMode) {
-        // 自动模式：验证文件夹路径
+      if (needsEmotionRecognition) {
+        // 情绪识别模式：验证扫描目录存在
         const sovitsDir = path.resolve(config.gpt_sovits_path, character.sovits);
         if (!fs.existsSync(sovitsDir) || !fs.statSync(sovitsDir).isDirectory()) {
-          throw new Error(`${prefix} SoVITS模型文件夹不存在或不是目录: ${sovitsDir}`);
+          throw new Error(`${prefix} SoVITS模型扫描目录不存在或不是目录: ${sovitsDir}`);
         }
       } else {
-        // 非自动模式：验证文件路径
+        // 非情绪识别模式：验证具体文件存在
         const sovitsPath = path.resolve(config.gpt_sovits_path, character.sovits);
         if (!fs.existsSync(sovitsPath)) {
           throw new Error(`${prefix} SoVITS模型文件不存在: ${sovitsPath}`);
+        }
+        // 检查文件扩展名
+        if (!sovitsPath.endsWith('.pth')) {
+          throw new Error(`${prefix} SoVITS模型文件必须以 .pth 结尾: ${sovitsPath}`);
         }
       }
       
@@ -177,20 +185,27 @@ export class VoiceConfigManager {
         throw new Error(`${prefix} 缺少参考音频路径`);
       }
       
-      if (isAutoMode) {
-        // 自动模式：验证文件夹路径
+      if (needsEmotionRecognition) {
+        // 情绪识别模式：验证扫描目录存在
         if (!fs.existsSync(character.ref_audio) || !fs.statSync(character.ref_audio).isDirectory()) {
-          throw new Error(`${prefix} 参考音频文件夹不存在或不是目录: ${character.ref_audio}`);
+          throw new Error(`${prefix} 参考音频扫描目录不存在或不是目录: ${character.ref_audio}`);
         }
       } else {
-        // 非自动模式：验证文件路径
+        // 非情绪识别模式：验证具体文件存在
         if (!fs.existsSync(character.ref_audio)) {
           throw new Error(`${prefix} 参考音频文件不存在: ${character.ref_audio}`);
         }
+        // 检查文件扩展名
+        const audioExt = path.extname(character.ref_audio).toLowerCase();
+        const supportedAudioFormats = ['.wav', '.mp3', '.flac', '.m4a'];
+        if (!supportedAudioFormats.includes(audioExt)) {
+          throw new Error(`${prefix} 参考音频文件格式不支持，支持格式: ${supportedAudioFormats.join(', ')}`);
+        }
       }
       
-      if (!isAutoMode && !character.ref_text) {
-        throw new Error(`${prefix} 缺少非自动模式下的参考文本 ref_text`);
+      // 非情绪识别模式需要参考文本
+      if (!needsEmotionRecognition && !character.ref_text) {
+        throw new Error(`${prefix} 非情绪识别模式需要提供参考文本 ref_text`);
       }
 
       // 验证推理配置

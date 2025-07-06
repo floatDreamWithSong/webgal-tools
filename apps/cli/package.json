@@ -1,12 +1,14 @@
 {
-  "name": "@webgal-tools/mcp-server",
+  "name": "@webgal-tools/cli",
   "version": "1.6.7",
-  "description": "WebGAL MCP服务器应用",
+  "description": "WebGAL 工具集统一命令行接口",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "webgal": "dist/index.js"
+  },
   "files": [
-    "dist/**/*",
-    "resource/**/*"
+    "dist/**/*"
   ],
   "publishConfig": {
     "access": "public"
@@ -14,30 +16,30 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/floatDreamWithSong/webgal-tools.git",
-    "directory": "apps/mcp-server"
+    "directory": "apps/cli"
   },
   "keywords": [
     "webgal",
+    "cli",
     "mcp",
-    "model-context-protocol",
-    "ai",
+    "voice",
     "gaming"
   ],
   "scripts": {
-    "build": "tsc && pnpm run copy-resources",
+    "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rimraf dist",
-    "copy-resources": "xcopy /E /I /Y resource dist\\resource",
+    "serve": "node dist/index.js",
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@webgal-tools/config": "workspace:*",
-    "@webgal-tools/logger": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.12.3",
-    "express": "^4.18.2"
+    "@webgal-tools/mcp-server": "workspace:*",
+    "@webgal-tools/voice": "workspace:*",
+    "inquirer": "^10.1.2"
   },
   "devDependencies": {
-    "@types/express": "^4.17.17",
+    "@types/inquirer": "^9.0.7",
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   }

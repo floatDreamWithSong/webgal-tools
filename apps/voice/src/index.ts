@@ -6,3 +6,4 @@ export * from './request.js';
 export * from './parallel-processor.js';
 export * from './backup.js';
 export * from './translate/index.js'; 
+export * from './main.js'

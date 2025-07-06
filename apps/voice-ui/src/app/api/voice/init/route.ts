@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
-import { initializeVoiceConfig } from '@/lib/voice-wrapper'
+import { initializeConfig } from '@webgal-tools/config'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,29 +11,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '缺少工作目录参数' }, { status: 400 })
     }
     
-    // 检查是否有任务正在运行
-    if (global.currentVoiceTask) {
-      return NextResponse.json({ error: '已有任务正在运行，请等待当前任务完成或停止任务' }, { status: 409 })
-    }
-    
     // 检查工作目录是否存在
     if (!fs.existsSync(workDir)) {
       return NextResponse.json({ error: '工作目录不存在' }, { status: 400 })
     }
     
-    // 直接调用voice包的初始化功能
-    const result = await initializeVoiceConfig(workDir, force)
+    // 直接调用 config 包的初始化功能
+    const result = initializeConfig({
+      workDir,
+      force,
+      onlyVoice: true
+    })
     
     if (result.success) {
       return NextResponse.json({ 
         success: true, 
         message: result.message,
-        output: result.details
+        details: result
       })
     } else {
       return NextResponse.json({ 
         error: result.message,
-        details: result.details
+        details: result
       }, { status: 500 })
     }
   } catch (error) {
