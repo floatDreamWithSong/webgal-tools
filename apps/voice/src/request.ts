@@ -214,7 +214,7 @@ class GPTSoVITSAPI {
       const timeout = setTimeout(() => {
         eventSource.close();
         reject(new Error('Timeout waiting for completion'));
-      }, 30000); // 30秒超时
+      }, 60000); // 60秒超时
 
       eventSource.onmessage = (event) => {
         try {

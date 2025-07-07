@@ -331,7 +331,7 @@ ${globalPrompt}
         model,
         prompt,
         temperature: 0.3, // 使用较低的温度以获得更一致的结果
-        maxTokens: 1000,
+        maxTokens: 512, // 限制输出长度，一般来说 token 输出在30+左右，500token都接近20秒了。因此不能等待太久，而且一句话怎么可能几百个字...
       });
 
       let responseText = result.text.trim();
