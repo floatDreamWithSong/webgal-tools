@@ -16,6 +16,8 @@ export interface TranslateConfig {
   check: boolean
   context_size: number
   additional_prompt?: string
+  temperature?: number
+  max_tokens?: number
 }
 
 export interface CharacterConfig {

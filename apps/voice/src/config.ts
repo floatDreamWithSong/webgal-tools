@@ -23,6 +23,8 @@ export interface TranslateConfig {
   model_name: string;
   context_size?: number;  // 上下文大小，默认为2
   additional_prompt?: string;  // 用户自定义的额外提示词信息
+  temperature?: number; // 模型温度参数，控制输出的随机性，范围0-2，默认0.3
+  max_tokens?: number; // 最大输出token数，默认512
   // 兼容旧配置
   ollama_endpoint?: string;
 }
@@ -256,6 +258,20 @@ export class VoiceConfigManager {
     if (this.requiresApiKey(config)) {
       if (!config.api_key || typeof config.api_key !== 'string') {
         throw new Error(`${config.model_type} 模型供应商需要提供 api_key`);
+      }
+    }
+
+    // 验证温度参数
+    if (config.temperature !== undefined) {
+      if (typeof config.temperature !== 'number' || config.temperature < 0 || config.temperature > 2) {
+        throw new Error('translate.temperature 必须在 0-2 之间');
+      }
+    }
+
+    // 验证最大token数
+    if (config.max_tokens !== undefined) {
+      if (typeof config.max_tokens !== 'number' || config.max_tokens < 1 || config.max_tokens > 4000) {
+        throw new Error('translate.max_tokens 必须在 1-4000 之间');
       }
     }
   }

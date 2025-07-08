@@ -39,6 +39,8 @@ export interface TranslateConfig {
   check: boolean;
   context_size: number;
   additional_prompt?: string;
+  temperature?: number; // 模型温度参数，控制输出的随机性，范围0-2，默认0.3
+  max_tokens?: number; // 最大输出token数，默认512
 }
 
 /**

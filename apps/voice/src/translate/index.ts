@@ -226,9 +226,7 @@ ${globalPrompt}
 ## 待处理文本
 "${text}"
 
-## 输出格式
-请严格按照以下JSON格式返回，确保它是一个有效的JSON对象，并放置在json代码块中：
-\`\`\`json
+## 输出格式必须为json
 {
   "gpt": "从列表中选择的 .ckpt 文件路径",
   "sovits": "从列表中选择的 .pth 文件路径",
@@ -236,7 +234,6 @@ ${globalPrompt}
   "translated_text": "翻译后的文本",
   "emotion": "对所分析文本情绪的简短描述（例如：开心）"
 }
-\`\`\`
 `;
 
     logger.debug(prompt);
@@ -330,10 +327,10 @@ ${globalPrompt}
       const result = await generateText({
         model,
         prompt,
-        temperature: 0.3, // 使用较低的温度以获得更一致的结果
-        maxTokens: 512, // 限制输出长度，一般来说 token 输出在30+左右，500token都接近20秒了。因此不能等待太久，而且一句话怎么可能几百个字...
+        temperature: config.temperature ?? 0.3, // 使用配置的温度参数，默认0.3
+        maxTokens: config.max_tokens ?? 512, // 使用配置的最大token数，默认512
       });
-
+      logger.debug('输出token: ', result.usage.completionTokens)
       let responseText = result.text.trim();
       
       if (!responseText) {
@@ -453,8 +450,8 @@ ${globalPrompt}
       const result = await generateText({
         model,
         prompt,
-        temperature: 0.3, // 使用较低的温度以获得更一致的翻译
-        maxTokens: 1000,
+        temperature: config.temperature ?? 0.3, // 使用配置的温度参数，默认0.3
+        maxTokens: config.max_tokens ?? 1000, // 使用配置的最大token数，默认1000
       });
 
       let translatedText = result.text.trim();

@@ -13,6 +13,8 @@ interface ValidationErrors {
   base_url?: string
   model_name?: string
   context_size?: string
+  temperature?: string
+  max_tokens?: string
 }
 
 export function TranslateSettings({ translate, onTranslateChange }: TranslateSettingsProps) {
@@ -51,6 +53,22 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
           return '上下文宽度必须在 0-10 之间'
         }
         break
+      case 'temperature':
+        if (value !== undefined && value !== null && value !== '') {
+          const tempNum = Number(value)
+          if (isNaN(tempNum) || tempNum < 0 || tempNum > 2) {
+            return '温度参数必须在 0-2 之间'
+          }
+        }
+        break
+      case 'max_tokens':
+        if (value !== undefined && value !== null && value !== '') {
+          const tokensNum = Number(value)
+          if (isNaN(tokensNum) || tokensNum < 1 || tokensNum > 4000) {
+            return '最大token数必须在 1-4000 之间'
+          }
+        }
+        break
     }
     return undefined
   }
@@ -66,6 +84,8 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
     newErrors.base_url = validateField('base_url', translate.base_url);
     newErrors.model_name = validateField('model_name', translate.model_name);
     newErrors.context_size = validateField('context_size', translate.context_size);
+    newErrors.temperature = validateField('temperature', translate.temperature);
+    newErrors.max_tokens = validateField('max_tokens', translate.max_tokens);
     setErrors(newErrors);
     return Object.values(newErrors).every(error => !error);
   }, [translate]);
@@ -209,6 +229,47 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
               />
               {touched.context_size && errors.context_size && (
                 <p className="mt-1 text-sm text-red-600">{errors.context_size}</p>
+              )}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                模型温度参数
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="2"
+                step="0.1"
+                value={translate.temperature ?? 0.3}
+                onChange={(e) => handleFieldChange('temperature', parseFloat(e.target.value) || 0.3)}
+                onBlur={() => handleFieldBlur('temperature')}
+                className={getFieldClassName('temperature')}
+                placeholder="0.3"
+              />
+              <p className="mt-1 text-sm text-gray-500">控制输出的随机性，0-2之间，默认0.3</p>
+              {touched.temperature && errors.temperature && (
+                <p className="mt-1 text-sm text-red-600">{errors.temperature}</p>
+              )}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                最大输出Token数
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="4000"
+                value={translate.max_tokens ?? 512}
+                onChange={(e) => handleFieldChange('max_tokens', parseInt(e.target.value) || 512)}
+                onBlur={() => handleFieldBlur('max_tokens')}
+                className={getFieldClassName('max_tokens')}
+                placeholder="512"
+              />
+              <p className="mt-1 text-sm text-gray-500">限制模型输出的最大token数，1-4k之间，默认512</p>
+              {touched.max_tokens && errors.max_tokens && (
+                <p className="mt-1 text-sm text-red-600">{errors.max_tokens}</p>
               )}
             </div>
           </div>

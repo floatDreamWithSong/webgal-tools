@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/cli",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "WebGAL 工具集统一命令行接口",
   "type": "module",
   "main": "dist/index.js",

@@ -2,6 +2,7 @@ import { EventSource } from 'eventsource';
 import fs from 'fs';
 import path from 'path';
 import { logger } from '@webgal-tools/logger';
+import { log } from 'console';
 
 // 语言选项映射（基于原代码中的 dict_language）
 const LANGUAGE_OPTIONS = {
@@ -252,33 +253,47 @@ class GPTSoVITSAPI {
   }
 
   /**
-   * 将音频文件复制到 Gradio 临时目录
+   * 将音频文件上传到 Gradio
    */
   private async prepareAudioFile(audioPath: string): Promise<any> {
     this.validateAudioFile(audioPath);
     
-    const tempDir = process.env.TEMP || process.env.TMP || '/tmp';
-    const gradioTempDir = path.join(tempDir, 'gradio', 'upload');
-    
-    // 确保目录存在
-    if (!fs.existsSync(gradioTempDir)) {
-      fs.mkdirSync(gradioTempDir, { recursive: true });
-    }
-
+    // 使用现有的 sessionHash 作为 upload_id
+    const uploadUrl = `${this.baseUrl}/upload?upload_id=${this.sessionHash}`;
+        
+    // 创建 FormData
+    const formData = new FormData();
     const fileName = path.basename(audioPath);
-    const targetPath = path.join(gradioTempDir, fileName);
+    const fileBuffer = fs.readFileSync(audioPath);
+    const fileBlob = new Blob([fileBuffer], { type: this.getMimeType(path.extname(fileName)) });
+    formData.append('files', fileBlob, fileName);
     
-    // 复制文件
-    fs.copyFileSync(audioPath, targetPath);
+    // 上传文件
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      body: formData,
+    });
     
-    // 获取文件信息
-    const stats = fs.statSync(targetPath);
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+    }
     
+    const uploadedFiles = await response.json() as string[];
+    
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      throw new Error('No file data returned from upload');
+    }
+    
+    const uploadedFilePath = uploadedFiles[0];
+    
+    logger.info("音频文件上传成功", [uploadedFilePath]);
+    
+    // 构造返回对象，保持与原来格式一致
     return {
-      path: targetPath.replace(/\\/g, '/'),
-      url: `${this.baseUrl}/file=${targetPath.replace(/\\/g, '/')}`,
+      path: uploadedFilePath.replace(/\\/g, '/'),
+      url: `${this.baseUrl}/file=${uploadedFilePath.replace(/\\/g, '/')}`,
       orig_name: fileName,
-      size: stats.size,
+      size: fs.statSync(audioPath).size,
       mime_type: this.getMimeType(path.extname(fileName)),
       meta: {
         _type: 'gradio.FileData'

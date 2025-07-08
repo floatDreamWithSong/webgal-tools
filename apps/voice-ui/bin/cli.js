@@ -31,7 +31,7 @@ serverProcess.stdout.on('data', (data) => {
     const output = data.toString();
     process.stdout.write(output);
 
-    if (!opened && output.includes('started server on')) {
+    if (!opened && output.includes('Ready in')) {
         opened = true;
         console.log(`UI Server is ready! Opening ${url} in your browser...`);
         open(url).catch(err => {

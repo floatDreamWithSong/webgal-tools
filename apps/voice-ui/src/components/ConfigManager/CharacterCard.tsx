@@ -80,8 +80,8 @@ export function CharacterCard({
         }
         break
       case 'ref_text':
-        if (!character.auto && (!value || typeof value !== 'string' || value.trim() === '')) {
-          return '非自动模式下，参考文本是必填项'
+        if (!character.auto && modelVersion === 'v3' && (!value || typeof value !== 'string' || value.trim() === '')) {
+          return '非自动模式下，v3版本需要填写参考文本'
         }
         break
     }
@@ -312,7 +312,7 @@ export function CharacterCard({
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                参考文本{!character.auto && <span className="text-red-500">*</span>}
+                参考文本{!character.auto && modelVersion === 'v3' && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="text"
