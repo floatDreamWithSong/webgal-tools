@@ -3,10 +3,11 @@ import { addConfigEventListener, removeConfigEventListener, ConfigEventType, Con
 
 export function useConfigEvents(
   eventTypes: ConfigEventType[],
-  callback: (event: ConfigEvent) => void,
-  deps: React.DependencyList = []
+  callback: (event: ConfigEvent) => void
 ) {
-  const memoizedCallback = useCallback(callback, deps)
+  const memoizedCallback = useCallback((event: ConfigEvent) => {
+    callback(event)
+  }, [callback])
 
   useEffect(() => {
     // 为每个事件类型添加监听器
@@ -24,21 +25,21 @@ export function useConfigEvents(
 }
 
 // 便捷 Hook，用于监听配置保存事件
-export function useConfigSaved(callback: (event: ConfigEvent) => void, deps: React.DependencyList = []) {
-  useConfigEvents(['config-saved'], callback, deps)
+export function useConfigSaved(callback: (event: ConfigEvent) => void) {
+  useConfigEvents(['config-saved'], callback)
 }
 
 // 便捷 Hook，用于监听配置加载事件
-export function useConfigLoaded(callback: (event: ConfigEvent) => void, deps: React.DependencyList = []) {
-  useConfigEvents(['config-loaded'], callback, deps)
+export function useConfigLoaded(callback: (event: ConfigEvent) => void) {
+  useConfigEvents(['config-loaded'], callback)
 }
 
 // 便捷 Hook，用于监听角色相关事件
-export function useCharacterEvents(callback: (event: ConfigEvent) => void, deps: React.DependencyList = []) {
-  useConfigEvents(['character-added', 'character-removed', 'character-updated'], callback, deps)
+export function useCharacterEvents(callback: (event: ConfigEvent) => void) {
+  useConfigEvents(['character-added', 'character-removed', 'character-updated'], callback)
 }
 
 // 便捷 Hook，用于监听所有配置相关事件
-export function useAllConfigEvents(callback: (event: ConfigEvent) => void, deps: React.DependencyList = []) {
-  useConfigEvents(['config-saved', 'config-loaded', 'character-added', 'character-removed', 'character-updated'], callback, deps)
+export function useAllConfigEvents(callback: (event: ConfigEvent) => void) {
+  useConfigEvents(['config-saved', 'config-loaded', 'character-added', 'character-removed', 'character-updated'], callback)
 } 

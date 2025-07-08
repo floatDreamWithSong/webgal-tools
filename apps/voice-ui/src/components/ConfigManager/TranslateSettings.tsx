@@ -22,7 +22,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
   const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   // 校验函数
-  const validateField = (field: string, value: unknown): string | undefined => {
+  const validateField = useCallback((field: string, value: unknown): string | undefined => {
     if (!translate.check) return undefined // 如果未启用翻译服务，不进行校验
 
     switch (field) {
@@ -71,7 +71,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
         break
     }
     return undefined
-  }
+  }, [translate.check])
 
   // 校验所有字段
   const validateAll = useCallback(() => {
@@ -88,7 +88,7 @@ export function TranslateSettings({ translate, onTranslateChange }: TranslateSet
     newErrors.max_tokens = validateField('max_tokens', translate.max_tokens);
     setErrors(newErrors);
     return Object.values(newErrors).every(error => !error);
-  }, [translate]);
+  }, [translate, validateField]);
 
   // 处理字段变化
   const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {

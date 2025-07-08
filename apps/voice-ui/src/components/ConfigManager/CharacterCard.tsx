@@ -39,7 +39,7 @@ export function CharacterCard({
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   // 校验函数
-  const validateField = (field: string, value: unknown): string | undefined => {
+  const validateField = useCallback((field: string, value: unknown): string | undefined => {
     switch (field) {
       case 'character_name':
         if (!value || typeof value !== 'string' || value.trim() === '') {
@@ -86,7 +86,7 @@ export function CharacterCard({
         break
     }
     return undefined
-  }
+  }, [character.auto, modelVersion])
 
   // 校验所有字段
   const validateAll = useCallback(() => {
@@ -98,7 +98,7 @@ export function CharacterCard({
     newErrors.ref_text = validateField('ref_text', character.ref_text);
     setErrors(newErrors);
     return Object.values(newErrors).every(error => !error);
-  }, [character]);
+  }, [character, validateField]);
 
   // 处理字段变化
   const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {
