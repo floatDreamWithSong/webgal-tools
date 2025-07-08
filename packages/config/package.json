@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/config",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "统一的配置文件加载和管理",
   "type": "module",
   "main": "dist/index.js",

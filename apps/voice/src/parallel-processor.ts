@@ -53,11 +53,10 @@ export class ParallelProcessor {
   // 语音合成队列和状态
   private voiceQueue: TranslateResult[] = [];
   private isVoiceSynthesizing = false;
-  private currentCharacter: string | null = null;
+  private currentModelKey: string | null = null; // 改为跟踪当前模型组合而不是角色名
 
   // 并发控制
   private maxConcurrency: number;
-  private activeTranslations = 0;
 
   // 回调函数
   private onTranslateProgress?: (completed: number, total: number, result: TranslateResult) => void;
@@ -239,13 +238,42 @@ export class ParallelProcessor {
     while (this.voiceQueue.length > 0) {
       const translateResult = this.voiceQueue.shift()!;
 
-      // 优先处理同一角色的任务
-      if (this.currentCharacter && this.currentCharacter !== translateResult.character) {
-        const sameCharacterIndex = this.voiceQueue.findIndex(task => task.character === this.currentCharacter);
-        if (sameCharacterIndex !== -1) {
+      // 计算当前任务的模型组合
+      const characterConfig = this.characterConfigs?.get(translateResult.character);
+      if (!characterConfig) {
+        logger.error(`❌ 角色 ${translateResult.character} 未在配置中找到，跳过处理`);
+        continue;
+      }
+
+      let taskModelKey: string;
+      if (translateResult.isAutoMode && translateResult.emotionResult) {
+        // 自动模式：使用情绪识别结果的模型
+        taskModelKey = `${translateResult.emotionResult.gpt}_${translateResult.emotionResult.sovits}`;
+      } else {
+        // 正常模式：使用角色配置的模型
+        taskModelKey = `${characterConfig.gpt}_${characterConfig.sovits}`;
+      }
+
+      // 优先处理同一模型组合的任务
+      if (this.currentModelKey && this.currentModelKey !== taskModelKey) {
+        const sameModelIndex = this.voiceQueue.findIndex(task => {
+          const taskCharConfig = this.characterConfigs?.get(task.character);
+          if (!taskCharConfig) return false;
+          
+          let taskKey: string;
+          if (task.isAutoMode && task.emotionResult) {
+            taskKey = `${task.emotionResult.gpt}_${task.emotionResult.sovits}`;
+          } else {
+            taskKey = `${taskCharConfig.gpt}_${taskCharConfig.sovits}`;
+          }
+          
+          return taskKey === this.currentModelKey;
+        });
+
+        if (sameModelIndex !== -1) {
           this.voiceQueue.unshift(translateResult);
-          const sameCharacterTask = this.voiceQueue.splice(sameCharacterIndex + 1, 1)[0];
-          await this.synthesizeVoice(sameCharacterTask);
+          const sameModelTask = this.voiceQueue.splice(sameModelIndex + 1, 1)[0];
+          await this.synthesizeVoice(sameModelTask);
           continue;
         }
       }
@@ -299,7 +327,7 @@ export class ParallelProcessor {
 
       // 检查是否需要切换角色模型
       const modelKey = `${finalCharacterConfig.gpt}_${finalCharacterConfig.sovits}`;
-      const currentModelKey = this.currentCharacter ? `${this.characterConfigs?.get(this.currentCharacter)?.gpt}_${this.characterConfigs?.get(this.currentCharacter)?.sovits}` : null;
+      const currentModelKey = this.currentModelKey;
 
       if (currentModelKey !== modelKey) {
         logger.info(`🔄 切换到角色模型: ${translateResult.character} (${finalCharacterConfig.gpt}/${finalCharacterConfig.sovits})`);
@@ -311,7 +339,7 @@ export class ParallelProcessor {
           finalCharacterConfig.inferrence_config?.text_language || '中文'
         );
 
-        this.currentCharacter = translateResult.character;
+        this.currentModelKey = modelKey;
       }
 
       // 生成语音
@@ -379,6 +407,7 @@ export class ParallelProcessor {
     this.completedVoiceCount = 0;
     this.completedVoiceTasks = [];
     this.voiceQueue = [];
+    this.currentModelKey = null; // 重置当前模型组合
 
     // 更新 gptSovitsPath 如果提供了
     if (gptSovitsPath) {
