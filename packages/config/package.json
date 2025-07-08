@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/config",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "description": "统一的配置文件加载和管理",
   "type": "module",
   "main": "dist/index.js",
@@ -29,9 +29,14 @@
     "clean": "rimraf dist",
     "copy-resources": "xcopy /E /I /Y example dist\\example"
   },
-  "dependencies": {},
+  "dependencies": {
+    "configstore": "^7.0.0",
+    "uuid": "^11.1.0"
+  },
   "devDependencies": {
-    "typescript": "^5.6.0",
-    "@types/node": "^22.0.0"
+    "@types/configstore": "^6.0.2",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.6.0"
   }
 }

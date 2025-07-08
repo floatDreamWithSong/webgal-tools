@@ -5,6 +5,7 @@ import { ConfigNavigation } from './ConfigNavigation'
 import { BasicSettings } from './BasicSettings'
 import { TranslateSettings } from './TranslateSettings'
 import { CharacterSettings } from './CharacterSettings'
+import { SaveTemplateModal } from './SaveTemplateModal'
 import { VoiceConfig, CharacterConfig } from './types'
 import { emitConfigEvent } from './eventBus'
 
@@ -33,6 +34,8 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
   const [activeSection, setActiveSection] = useState<'basic' | 'translate' | 'characters'>('basic')
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false)
+  const [saveTemplateLoading, setSaveTemplateLoading] = useState(false)
 
   const loadConfig = useCallback(async () => {
     if (!workDir) return
@@ -134,6 +137,37 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
     emitConfigEvent('character-updated', { index, field, value })
   }
 
+  // 处理保存模板
+  const handleSaveTemplate = useCallback(async (name: string, description: string, type: 'voice' | 'mcp' | 'all') => {
+    setSaveTemplateLoading(true)
+    try {
+      const response = await fetch('/api/config/templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          type,
+          config
+        })
+      })
+
+      if (response.ok) {
+        setShowSaveTemplateModal(false)
+        // 可以显示成功消息
+      } else {
+        const error = await response.json()
+        console.error('保存模板失败:', error)
+      }
+    } catch (error) {
+      console.error('保存模板失败:', error)
+    } finally {
+      setSaveTemplateLoading(false)
+    }
+  }, [config])
+
   if (!workDir) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -205,6 +239,12 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
             >
               {loading ? '保存中...' : '保存配置'}
             </button>
+            <button
+              onClick={() => setShowSaveTemplateModal(true)}
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md font-medium text-sm"
+            >
+              保存为模板
+            </button>
             {saved && (
               <div className="text-green-600 text-sm">
                 配置已保存成功！
@@ -213,6 +253,15 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
           </div>
         )}
       </div>
+
+      {/* 保存模板弹窗 */}
+      <SaveTemplateModal
+        isOpen={showSaveTemplateModal}
+        onClose={() => setShowSaveTemplateModal(false)}
+        onSave={handleSaveTemplate}
+        loading={saveTemplateLoading}
+        configType="voice"
+      />
     </div>
   )
 } 

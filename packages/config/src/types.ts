@@ -92,4 +92,39 @@ export interface InferrenceConfig {
   sample_steps: number;
   if_sr: boolean;
   pause_second: number;
+}
+
+/**
+ * 配置模板
+ */
+export interface ConfigTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'voice' | 'mcp' | 'all';
+  config: VoiceConfig | any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 模板列表项
+ */
+export interface TemplateListItem {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'voice' | 'mcp' | 'all';
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 保存模板选项
+ */
+export interface SaveTemplateOptions {
+  name: string;
+  description?: string;
+  type: 'voice' | 'mcp' | 'all';
+  config: VoiceConfig | any;
 } 

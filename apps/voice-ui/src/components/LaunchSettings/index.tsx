@@ -160,7 +160,7 @@ export function LaunchSettings({ workDir }: LaunchSettingsProps) {
   }, [])
 
   // 初始化配置
-  const initializeConfig = useCallback(async () => {
+  const initializeConfig = useCallback(async (templateId?: string | null) => {
     if (!workDir) {
       alert('请先选择工作目录')
       return
@@ -173,14 +173,15 @@ export function LaunchSettings({ workDir }: LaunchSettingsProps) {
         message: '正在初始化配置...'
       })
       
-      const response = await fetch('/api/voice/init', {
+      const response = await fetch('/api/config/init', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
           workDir,
-          force: config.forceMode
+          force: config.forceMode,
+          templateId
         })
       })
       
@@ -320,6 +321,7 @@ export function LaunchSettings({ workDir }: LaunchSettingsProps) {
         workDirValid={workDirValid}
         forceMode={config.forceMode}
         taskStatus={taskStatus}
+        configValid={configValid}
         onForceModeChange={(forceMode) => setConfig(prev => ({ ...prev, forceMode }))}
         onInitialize={initializeConfig}
       />

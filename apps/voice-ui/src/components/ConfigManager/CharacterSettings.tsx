@@ -1,8 +1,16 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { CharacterCard } from './CharacterCard'
 import { CharacterConfig } from './types'
+
+interface ValidationErrors {
+  character_name?: string
+  gpt?: string
+  sovits?: string
+  ref_audio?: string
+  ref_text?: string
+}
 
 interface CharacterSettingsProps {
   characters: CharacterConfig[]
@@ -25,9 +33,11 @@ export function CharacterSettings({
   modelVersion,
   onSave,
   loading = false,
-  saved = false
+  saved = false,
 }: CharacterSettingsProps) {
   const prevCharactersLength = useRef(characters.length)
+  const [validationStates, setValidationStates] = useState<Record<number, { isValid: boolean; errors: ValidationErrors }>>({})
+  const [validationMessage, setValidationMessage] = useState<string>('')
 
   // 监听角色数量变化，自动滚动到底部
   useEffect(() => {
@@ -62,6 +72,72 @@ export function CharacterSettings({
     prevCharactersLength.current = characters.length
   }, [characters.length])
 
+  // 处理角色校验状态变化
+  const handleValidationChange = useCallback((index: number, isValid: boolean, errors: ValidationErrors) => {
+    setValidationStates(prev => ({
+      ...prev,
+      [index]: { isValid, errors }
+    }))
+  }, [])
+
+  // 校验所有角色
+  const validateAllCharacters = useCallback(() => {
+    const invalidCharacters = Object.entries(validationStates).filter(([, state]) => !state.isValid)
+    
+    if (invalidCharacters.length > 0) {
+      const invalidIndexes = invalidCharacters.map(([index]) => parseInt(index) + 1)
+      setValidationMessage(`角色 ${invalidIndexes.join(', ')} 的配置有误，请检查后重试`)
+      return false
+    }
+    
+    setValidationMessage('')
+    return true
+  }, [validationStates])
+
+  // 处理保存
+  const handleSave = useCallback(() => {
+    if (!validateAllCharacters()) {
+      return
+    }
+    onSave?.()
+  }, [validateAllCharacters, onSave])
+
+  // 处理角色删除，清理校验状态
+  const handleRemoveCharacter = useCallback((index: number) => {
+    setValidationStates(prev => {
+      const newStates = { ...prev }
+      delete newStates[index]
+      // 重新索引
+      const reindexedStates: Record<number, { isValid: boolean; errors: ValidationErrors }> = {}
+      Object.entries(newStates).forEach(([oldIndex, state]) => {
+        const oldIndexNum = parseInt(oldIndex)
+        if (oldIndexNum > index) {
+          reindexedStates[oldIndexNum - 1] = state
+        } else {
+          reindexedStates[oldIndexNum] = state
+        }
+      })
+      return reindexedStates
+    })
+    onRemoveCharacter(index)
+  }, [onRemoveCharacter])
+
+
+
+  // 当角色数量变化时，清理不存在的角色的校验状态
+  useEffect(() => {
+    setValidationStates(prev => {
+      const newStates: Record<number, { isValid: boolean; errors: ValidationErrors }> = {}
+      Object.entries(prev).forEach(([index, state]) => {
+        const indexNum = parseInt(index)
+        if (indexNum < characters.length) {
+          newStates[indexNum] = state
+        }
+      })
+      return newStates
+    })
+  }, [characters.length])
+
   return (
     <div className="flex flex-col h-full">
       {/* 固定在顶部的按钮区域 */}
@@ -71,7 +147,7 @@ export function CharacterSettings({
           <div className="flex items-center space-x-3">
             {onSave && (
               <button
-                onClick={onSave}
+                onClick={handleSave}
                 disabled={loading}
                 className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-3 py-1.5 rounded-md text-sm font-medium"
               >
@@ -86,7 +162,12 @@ export function CharacterSettings({
             </button>
           </div>
         </div>
-        {saved && (
+        {validationMessage && (
+          <div className="mt-2 text-red-600 text-sm">
+            {validationMessage}
+          </div>
+        )}
+        {saved && !validationMessage && (
           <div className="mt-2 text-green-600 text-sm">
             配置已保存成功！
           </div>
@@ -102,9 +183,10 @@ export function CharacterSettings({
               character={character}
               index={index}
               onUpdate={onUpdateCharacter}
-              onRemove={onRemoveCharacter}
+              onRemove={handleRemoveCharacter}
               gptSovitsPath={gptSovitsPath}
               modelVersion={modelVersion}
+              onValidationChange={handleValidationChange}
             />
           ))}
         </div>

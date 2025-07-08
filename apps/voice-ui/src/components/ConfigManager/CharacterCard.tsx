@@ -13,6 +13,7 @@ interface CharacterCardProps {
   onRemove: (index: number) => void
   gptSovitsPath: string
   modelVersion: string
+  onValidationChange?: (index: number, isValid: boolean, errors: ValidationErrors) => void
 }
 
 interface ValidationErrors {
@@ -29,7 +30,8 @@ export function CharacterCard({
   onUpdate, 
   onRemove, 
   gptSovitsPath, 
-  modelVersion 
+  modelVersion,
+  onValidationChange
 }: CharacterCardProps) {
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
@@ -97,8 +99,13 @@ export function CharacterCard({
     newErrors.ref_audio = validateField('ref_audio', character.ref_audio);
     newErrors.ref_text = validateField('ref_text', character.ref_text);
     setErrors(newErrors);
-    return Object.values(newErrors).every(error => !error);
-  }, [character, validateField]);
+    const isValid = Object.values(newErrors).every(error => !error);
+    
+    // 通知父组件校验结果
+    onValidationChange?.(index, isValid, newErrors);
+    
+    return isValid;
+  }, [character, validateField, index, onValidationChange]);
 
   // 处理字段变化
   const handleFieldChange = (field: keyof ValidationErrors, value: unknown) => {
@@ -154,6 +161,11 @@ export function CharacterCard({
   useEffect(() => {
     validateAll()
   }, [character.auto, validateAll])
+
+  // 当角色数据变化时重新校验
+  useEffect(() => {
+    validateAll()
+  }, [character.character_name, character.gpt, character.sovits, character.ref_audio, character.ref_text, validateAll])
 
   return (
     <div className="border border-gray-200 rounded-lg p-4">
