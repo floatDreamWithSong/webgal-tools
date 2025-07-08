@@ -335,8 +335,8 @@ export class ParallelProcessor {
         await this.api.setGptModel(finalCharacterConfig.gpt);
         await this.api.setSovitsModel(
           finalCharacterConfig.sovits,
-          finalCharacterConfig.inferrence_config?.prompt_language || '中文',
-          finalCharacterConfig.inferrence_config?.text_language || '中文'
+          finalCharacterConfig.inferrence_config?.prompt_language || '日文',
+          finalCharacterConfig.inferrence_config?.text_language || '日文'
         );
 
         this.currentModelKey = modelKey;

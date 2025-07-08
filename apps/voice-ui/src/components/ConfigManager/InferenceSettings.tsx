@@ -20,6 +20,31 @@ interface ValidationErrors {
   pause_second?: string
 }
 
+// 语种选项
+const LANGUAGE_OPTIONS = [
+  { value: '中文', label: '中文' },
+  { value: '英文', label: '英文' },
+  { value: '日文', label: '日文' },
+  { value: '粤语', label: '粤语' },
+  { value: '韩文', label: '韩文' },
+  { value: '中英混合', label: '中英混合' },
+  { value: '日英混合', label: '日英混合' },
+  { value: '粤英混合', label: '粤英混合' },
+  { value: '韩英混合', label: '韩英混合' },
+  { value: '多语种混合', label: '多语种混合' },
+  { value: '多语种混合(粤语)', label: '多语种混合(粤语)' }
+]
+
+// 切句方式选项
+const CUT_OPTIONS = [
+  { value: '不切', label: '不切' },
+  { value: '凑四句一切', label: '凑四句一切' },
+  { value: '凑50字一切', label: '凑50字一切' },
+  { value: '按中文句号。切', label: '按中文句号。切' },
+  { value: '按英文句号.切', label: '按英文句号.切' },
+  { value: '按标点符号切', label: '按标点符号切' }
+]
+
 export function InferenceSettings({ config, onConfigChange }: InferenceSettingsProps) {
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
@@ -158,16 +183,20 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            提示语言 <span className="text-red-500">*</span>
+            音频参考语种 <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
+          <select
             value={config.prompt_language}
             onChange={(e) => handleFieldChange('prompt_language', e.target.value)}
             onBlur={() => handleFieldBlur('prompt_language')}
             className={getFieldClassName('prompt_language')}
-            placeholder="日文"
-          />
+          >
+            {LANGUAGE_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           {touched.prompt_language && errors.prompt_language && (
             <p className="mt-1 text-sm text-red-600">{errors.prompt_language}</p>
           )}
@@ -175,16 +204,20 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            文本语言 <span className="text-red-500">*</span>
+            参考文本语种 <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
+          <select
             value={config.text_language}
             onChange={(e) => handleFieldChange('text_language', e.target.value)}
             onBlur={() => handleFieldBlur('text_language')}
             className={getFieldClassName('text_language')}
-            placeholder="日文"
-          />
+          >
+            {LANGUAGE_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           {touched.text_language && errors.text_language && (
             <p className="mt-1 text-sm text-red-600">{errors.text_language}</p>
           )}
@@ -192,16 +225,20 @@ export function InferenceSettings({ config, onConfigChange }: InferenceSettingsP
 
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            切分方式 <span className="text-red-500">*</span>
+            切句方式 <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
+          <select
             value={config.how_to_cut}
             onChange={(e) => handleFieldChange('how_to_cut', e.target.value)}
             onBlur={() => handleFieldBlur('how_to_cut')}
             className={getFieldClassName('how_to_cut')}
-            placeholder="凑四句一切"
-          />
+          >
+            {CUT_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           {touched.how_to_cut && errors.how_to_cut && (
             <p className="mt-1 text-sm text-red-600">{errors.how_to_cut}</p>
           )}

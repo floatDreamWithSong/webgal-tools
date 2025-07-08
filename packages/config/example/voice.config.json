@@ -60,7 +60,7 @@
     },
     {
       "character_name": "初华",
-      "auto": true,
+      "auto": false,
       "gpt": "GPT_weights_v2ProPlus/Mujica_三角初華_v2pp.ckpt",
       "sovits": "SoVITS_weights_v2ProPlus/Mujica_三角初華_v2pp.pth",
       "ref_audio": "D:/AIVoice/语音模型/GPT-SoVITS v2 pro plus/Mujica/三角初华/(A)まなちゃんソロの仕事も始まって、大変なときなのに.wav",

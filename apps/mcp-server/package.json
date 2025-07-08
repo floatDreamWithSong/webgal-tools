@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/mcp-server",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "description": "WebGAL MCP服务器应用",
   "type": "module",
   "main": "dist/index.js",

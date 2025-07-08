@@ -354,8 +354,8 @@ class GPTSoVITSAPI {
    */
   async setSovitsModel(
     modelName: string, 
-    promptLanguage: keyof typeof LANGUAGE_OPTIONS = '中文', 
-    textLanguage: keyof typeof LANGUAGE_OPTIONS = '中文'
+    promptLanguage: keyof typeof LANGUAGE_OPTIONS = '日文', 
+    textLanguage: keyof typeof LANGUAGE_OPTIONS = '日文'
   ): Promise<boolean> {
     try {
       if (!modelName.endsWith('.pth')) {

@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/voice",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "description": "WebGAL GPT-SoVITS语音合成应用",
   "type": "module",
   "main": "dist/index.js",
