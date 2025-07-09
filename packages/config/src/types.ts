@@ -70,6 +70,16 @@ export interface EmotionRecognitionResult {
 }
 
 /**
+ * AI模型选择响应接口（使用索引）
+ */
+export interface ModelSelectionResponse {
+  model_group_index: number; // 选择的模型组索引号
+  ref_audio_index: number; // 选择的参考音频索引号
+  translated_text: string; // 翻译后的文本
+  emotion: string; // 识别的情绪，如angry、sad、surprised、neutral等
+}
+
+/**
  * 扫描到的模型文件信息
  */
 export interface ScannedModelFiles {

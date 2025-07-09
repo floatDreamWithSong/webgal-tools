@@ -73,7 +73,7 @@ class ConsoleLogger implements Logger {
 }
 
 // 全局日志实例
-const globalLogger = new ConsoleLogger();
+const globalLogger = new ConsoleLogger(process.env.NODE_ENV === 'development' ? LogLevel.DEBUG : LogLevel.INFO);
 
 export const logger = globalLogger;
 

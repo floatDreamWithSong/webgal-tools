@@ -6,7 +6,7 @@ import { createMistral } from '@ai-sdk/mistral';
 import { createCohere } from '@ai-sdk/cohere';
 import { createOllama } from 'ollama-ai-provider';
 import { TranslateConfig, CharacterVoiceConfig } from '../config.js';
-import { ScannedModelFiles, EmotionRecognitionResult } from '@webgal-tools/config';
+import { ScannedModelFiles, EmotionRecognitionResult, ModelSelectionResponse } from '@webgal-tools/config';
 import { logger } from '@webgal-tools/logger';
 import path from 'node:path';
 
@@ -25,6 +25,10 @@ const characterStyles = new Map<string, string>();
  */
 export class TranslateService {
   private modelCache = new Map<string, LanguageModel>();
+  private currentIndexMaps?: {
+    modelGroups: Map<number, { gpt: string; sovits: string }>;
+    refAudio: Map<number, string>;
+  };
 
   /**
    * 获取或创建AI模型实例
@@ -126,6 +130,33 @@ export class TranslateService {
   }
 
   /**
+   * 获取通用翻译规则
+   * 提取两个提示词中共同的翻译规则部分
+   */
+  private getCommonTranslationRules(targetLanguage: string): string {
+    return `
+-   **全部翻译**：无论是口癖、拟声词、专有名词等，都必须翻译为目标语言的表达方式，不允许保留原文或夹杂原文。
+    -   错误示例："嘿嘿嘿" -> "嘿嘿嘿"
+    -   正确示例："嘿嘿嘿" -> "ふふふ" 或 "ほほほ" 或 "hehehe"
+    -   错误示例："老大" -> "老大"
+    -   正确示例："老大" -> "ボス" 或 "Boss"
+    - 如果你确实不会翻译，并且这些词汇无关语义，那么你还可以将这些词汇移除，但必须保证不改变原文的意义
+-   **疑问句处理**：疑问句翻译时要注意保持疑问语气，可以使用目标语言的疑问词、语调或语气词。
+    -   正确示例："你要去哪里？" -> "どこに行くの？"（日语中加了疑问语气词"の"）
+    -   正确示例："真的吗？" -> "本当？" 或 "Really?"（保持疑问语气）
+    -   错误示例："你要去哪里？" -> "どこに行く"（缺少疑问语气）
+-   **感叹句处理**：感叹句翻译时要保持强烈的情感表达，可以使用感叹词、强调语气或感叹号。
+    -   正确示例："太棒了！" -> "すごい！" 或 "Amazing!"
+    -   正确示例："好痛！" -> "痛い！" 或 "Ouch!"
+    -   错误示例："太棒了！" -> "すごい"（缺少感叹语气）
+-   **语气词适配**：根据目标语言的特点，适当调整语气词的使用。
+    -   日语：可以使用"ね"、"よ"、"わ"、"さ"等语气词
+    -   英语：可以使用"you know"、"well"、"oh"等
+    -   中文：可以使用"呢"、"吧"、"啊"等
+`;
+  }
+
+  /**
    * 构建翻译提示词
    */
   private buildTranslatePrompt(
@@ -148,9 +179,9 @@ export class TranslateService {
     -   错误示例：\`你好！（Hello!）\`
     -   正确示例：\`Hello!\`
 2.  **忠实原文**：保持原文的语气、情感和风格。不要添加或删减信息。
-    -   原文：“你好!”
-    -   错误翻译：“你好吗?”
-    -   正确翻译：“Hello!”
+    -   原文："你好!"
+    -   错误翻译："你好吗?"
+    -   正确翻译："Hello!"
 3.  **流畅自然**：译文需符合${targetLanguage}的语言习惯。
 4.  **遵循角色设定**：严格遵守提供的角色信息和语言风格。
 5.  **参考示例**:
@@ -158,6 +189,23 @@ export class TranslateService {
     - 用户目标: 若叶同学?
     - 分析: 这里直接叫同学的姓，说明并不是很亲近的人，应该使用さん来保证礼貌
     - 最终翻译: わかばさん?
+${this.getCommonTranslationRules(targetLanguage)}
+7.  **适度润色**：可以选择性地添加目标语言常用的语气词或语气助词，以提升译文的自然度和口语感，但必须保证不改变原文的意义。
+    -   正确示例："快点！" -> "早くね！"（日语中加了语气词"ね"更自然）
+    -   错误示例："快点！" -> "你最好快点，不然我就生气了！"（添加了原文没有的威胁语气，改变了原意）
+11. **标点符号使用**：根据语气和情感使用合适的标点符号来调制语气，增强表达效果。
+    -   **疑问句**：使用问号"？"或"?"，表示疑问、困惑、惊讶等
+    -   **感叹句**：使用感叹号"！"或"!"，表示强烈情感、惊讶、愤怒、兴奋等
+    -   **省略号**：使用"..."或"…"，表示犹豫、思考、未完待续等
+    -   **破折号**：使用"—"或"-"，表示转折、强调、停顿等
+    -   **正确示例**：
+        - "真的吗？" → "本当？"（疑问）
+        - "太棒了！" → "すごい！"（兴奋）
+        - "那个..." → "あの..."（犹豫）
+        - "哼—" → "ふん—"（不屑）
+    -   **错误示例**：
+        - "真的吗？" → "本当"（缺少问号，失去疑问语气）
+        - "太棒了！" → "すごい"（缺少感叹号，失去兴奋感）
 
 ## 背景信息
 -   **当前说话角色**: ${character}
@@ -188,23 +236,87 @@ ${text}
   ): string {
     const characterStyle = this.getCharacterStyle(character);
 
+    // 创建模型组索引映射
+    const modelGroupIndexMap = new Map<number, { gpt: string; sovits: string }>();
+    const refAudioIndexMap = new Map<number, string>();
+
+    // 按basename分组GPT和SoVITS模型
+    const modelGroups = new Map<string, { gpt: string; sovits: string }>();
+    
+    // 遍历GPT文件，寻找匹配的SoVITS文件
+    for (const gptFile of scannedFiles.gpt_files) {
+      const gptBasename = path.basename(gptFile, path.extname(gptFile));
+      
+      // 寻找对应的SoVITS文件
+      const matchingSovits = scannedFiles.sovits_files.find(sovitsFile => {
+        const sovitsBasename = path.basename(sovitsFile, path.extname(sovitsFile));
+        return gptBasename === sovitsBasename;
+      });
+      
+      if (matchingSovits) {
+        modelGroups.set(gptBasename, {
+          gpt: gptFile,
+          sovits: matchingSovits
+        });
+      }
+    }
+    
+    // 为未匹配的GPT文件创建单独的组
+    for (const gptFile of scannedFiles.gpt_files) {
+      const gptBasename = path.basename(gptFile, path.extname(gptFile));
+      if (!modelGroups.has(gptBasename)) {
+        modelGroups.set(gptBasename, {
+          gpt: gptFile,
+          sovits: scannedFiles.sovits_files[0] || '' // 使用第一个SoVITS文件作为默认
+        });
+      }
+    }
+    
+    // 为未匹配的SoVITS文件创建单独的组
+    for (const sovitsFile of scannedFiles.sovits_files) {
+      const sovitsBasename = path.basename(sovitsFile, path.extname(sovitsFile));
+      if (!modelGroups.has(sovitsBasename)) {
+        modelGroups.set(sovitsBasename, {
+          gpt: scannedFiles.gpt_files[0] || '', // 使用第一个GPT文件作为默认
+          sovits: sovitsFile
+        });
+      }
+    }
+
+    // 创建模型组列表
+    const modelGroupsList = Array.from(modelGroups.entries()).map(([basename, files], index) => {
+      const groupIndex = index + 1;
+      modelGroupIndexMap.set(groupIndex, files);
+      return `${groupIndex}. \`${basename}\` (GPT: ${path.basename(files.gpt)}, SoVITS: ${path.basename(files.sovits)})`;
+    }).join('\n');
+
+    // 为参考音频文件创建索引
+    const refAudioFilesList = scannedFiles.ref_audio_files.map((f, index) => {
+      const fileIndex = index + 1;
+      refAudioIndexMap.set(fileIndex, f);
+      return `${fileIndex}. \`${f}\``;
+    }).join('\n');
+
+    // 存储索引映射到实例中，供后续使用
+    this.currentIndexMaps = {
+      modelGroups: modelGroupIndexMap,
+      refAudio: refAudioIndexMap
+    };
+
     let prompt = `你是一位专业的AI语音生成助手。你的任务是分析一段游戏对话，将其翻译成${targetLanguage}，然后根据对话内容和情感，从提供的文件列表中选择最合适的语音模型来生成音频。
 
 ## 任务流程
 1.  **分析**: 理解 <待处理文本> 的内容、上下文和情感。
 2.  **翻译**: 将文本翻译成${targetLanguage}。
-3.  **选择**: 从 <可用模型文件> 列表中，为翻译后的文本选择最匹配的 \`gpt\`、\`sovits\` 和 \`ref_audio\` 文件。
+3.  **选择**: 从 <可用模型文件> 列表中，为翻译后的文本选择最匹配的模型组索引号和参考音频索引号。
 4.  **输出**: 以一个完整的JSON对象的形式返回结果，不要有任何其他多余的文字。
 
 ## 可用模型文件
-### GPT 模型 (.ckpt)
-${scannedFiles.gpt_files.map(f => `- \`${f}\``).join('\n') || '无'}
-
-### SoVITS 模型 (.pth)
-${scannedFiles.sovits_files.map(f => `- \`${f}\``).join('\n') || '无'}
+### 模型组 (GPT + SoVITS)
+${modelGroupsList || '无'}
 
 ### 参考音频
-${scannedFiles.ref_audio_files.map(f => `- \`${f}\``).join('\n') || '无'}
+${refAudioFilesList || '无'}
 
 ## 背景信息
 -   **当前说话角色**: ${character}
@@ -215,22 +327,29 @@ ${globalPrompt ? `
 ${globalPrompt}
 ` : ''}
 ## 模型选择逻辑
--   **情感匹配**: 分析文本情感（如：开心、悲伤、愤怒、惊讶、中性），选择文件名中最能体现该情感的模型。
--   **内容匹配**: 如果文件名包含场景或状态信息，请匹配文本内容。
--   **备用方案**: 如果没有明显匹配项，选择一个文件名看起来最通用、最中性的模型。
+-   **情感匹配**: 分析文本情感（如：开心、悲伤、愤怒、惊讶、中性、紧张、温柔、兴奋等），选择模型组名称中最能体现该情感的模型。
+-   **内容匹配**: 如果模型组名称包含场景或状态信息，请匹配文本内容。
+${this.getCommonTranslationRules(targetLanguage)}
+-   **备用方案**: 如果没有明显匹配项，选择一个看起来最通用、最中性的模型组。
 -   **示例分析**:
-    -   "要一起吃午饭吗？" -> 情绪: 中性, 日常。可选择通用模型。
-    -   "我的外卖被偷了..." -> 情绪: 悲伤, 沮丧。应选择带有 "sad" 或 "sorrow" 等字样的模型。
-    -   "谁敢这么欺负咱们老大！" -> 情绪: 愤怒, 激动。应选择带有 "angry" 或 "rage" 等字样的模型。
+    -   **日常对话**: "要一起吃午饭吗？" -> 情绪: 中性, 日常。可选择通用模型或带有 "normal"、"neutral" 字样的模型组。
+    -   **悲伤情绪**: "我的外卖被偷了..." -> 情绪: 悲伤, 沮丧。应选择带有 "sad"、"sorrow"、"cry" 等字样的模型组。
+    -   **愤怒情绪**: "谁敢这么欺负咱们老大！" -> 情绪: 愤怒, 激动。应选择带有 "angry"、"rage"、"mad" 等字样的模型组。
+    -   **开心情绪**: "哇！我中奖了！" -> 情绪: 开心, 兴奋。应选择带有 "happy"、"joy"、"excited" 等字样的模型组。
+    -   **惊讶情绪**: "什么？你说的是真的吗？" -> 情绪: 惊讶, 震惊。应选择带有 "surprised"、"shock"、"amazed" 等字样的模型组。
+    -   **温柔情绪**: "别担心，一切都会好起来的。" -> 情绪: 温柔, 安慰。应选择带有 "gentle"、"soft"、"comfort" 等字样的模型组。
+    -   **紧张情绪**: "快跑！后面有人追来了！" -> 情绪: 紧张, 恐惧。应选择带有 "nervous"、"fear"、"panic" 等字样的模型组。
+    -   **害羞情绪**: "那个...我可以和你一起吗？" -> 情绪: 害羞, 腼腆。应选择带有 "shy"、"timid"、"bashful" 等字样的模型组。
+    -   **傲慢情绪**: "哼，就凭你也配？" -> 情绪: 傲慢, 轻蔑。应选择带有 "arrogant"、"proud"、"contempt" 等字样的模型组。
+    -   **疑惑情绪**: "咦？这是怎么回事？" -> 情绪: 疑惑, 困惑。应选择带有 "confused"、"puzzled"、"wonder" 等字样的模型组。
 
 ## 待处理文本
 "${text}"
 
 ## 输出格式必须为json
 {
-  "gpt": "从列表中选择的 .ckpt 文件路径",
-  "sovits": "从列表中选择的 .pth 文件路径",
-  "ref_audio": "从列表中选择的参考音频路径",
+  "model_group_index": 选择的模型组索引号（数字）, 
+  "ref_audio_index": 选择的参考音频索引号（数字）, 
   "translated_text": "翻译后的文本",
   "emotion": "对所分析文本情绪的简短描述（例如：开心）"
 }
@@ -344,7 +463,7 @@ ${globalPrompt}
       }
 
       const jsonText = jsonMatch[0];
-      let selectionResult: EmotionRecognitionResult;
+      let selectionResult: ModelSelectionResponse;
 
       try {
         selectionResult = JSON.parse(jsonText);
@@ -353,48 +472,62 @@ ${globalPrompt}
       }
 
       // 验证响应结构
-      if (!selectionResult.gpt || !selectionResult.sovits || !selectionResult.ref_audio || 
+      if (!selectionResult.model_group_index || !selectionResult.ref_audio_index || 
           !selectionResult.translated_text || !selectionResult.emotion) {
         throw new Error('响应JSON缺少必要的字段');
       }
 
+      // 检查索引映射是否存在
+      if (!this.currentIndexMaps) {
+        throw new Error('索引映射未初始化');
+      }
+
+      // 使用索引映射获取模型组和参考音频路径
+      const modelGroup = this.currentIndexMaps.modelGroups.get(selectionResult.model_group_index);
+      const refAudioPath = this.currentIndexMaps.refAudio.get(selectionResult.ref_audio_index);
+
+      if (!modelGroup || !refAudioPath) {
+        throw new Error('无法通过索引找到对应的文件路径');
+      }
+
       // 使用智能路径匹配验证选择的文件
-      const matchedGpt = this.findBestMatchingPath(selectionResult.gpt, scannedFiles.gpt_files);
-      if (matchedGpt) {
-        if (matchedGpt !== selectionResult.gpt) {
-          logger.info(`GPT路径匹配: "${selectionResult.gpt}" -> "${matchedGpt}"`);
-        }
-        selectionResult.gpt = matchedGpt;
-      } else {
-        logger.warn(`无法匹配GPT文件: ${selectionResult.gpt}，使用第一个可用文件`);
-        selectionResult.gpt = scannedFiles.gpt_files[0];
+      const matchedGpt = this.findBestMatchingPath(modelGroup.gpt, scannedFiles.gpt_files);
+      const matchedSovits = this.findBestMatchingPath(modelGroup.sovits, scannedFiles.sovits_files);
+      const matchedRefAudio = this.findBestMatchingPath(refAudioPath, scannedFiles.ref_audio_files);
+
+      // 构建最终结果
+      const finalResult: EmotionRecognitionResult = {
+        gpt: matchedGpt || scannedFiles.gpt_files[0] || '',
+        sovits: matchedSovits || scannedFiles.sovits_files[0] || '',
+        ref_audio: matchedRefAudio || scannedFiles.ref_audio_files[0] || '',
+        translated_text: selectionResult.translated_text,
+        emotion: selectionResult.emotion
+      };
+
+      // 记录匹配信息
+      if (matchedGpt && matchedGpt !== modelGroup.gpt) {
+        logger.info(`GPT路径匹配: "${modelGroup.gpt}" -> "${matchedGpt}"`);
+      }
+      if (matchedSovits && matchedSovits !== modelGroup.sovits) {
+        logger.info(`SoVITS路径匹配: "${modelGroup.sovits}" -> "${matchedSovits}"`);
+      }
+      if (matchedRefAudio && matchedRefAudio !== refAudioPath) {
+        logger.info(`参考音频路径匹配: "${refAudioPath}" -> "${matchedRefAudio}"`);
       }
 
-      const matchedSovits = this.findBestMatchingPath(selectionResult.sovits, scannedFiles.sovits_files);
-      if (matchedSovits) {
-        if (matchedSovits !== selectionResult.sovits) {
-          logger.info(`SoVITS路径匹配: "${selectionResult.sovits}" -> "${matchedSovits}"`);
-        }
-        selectionResult.sovits = matchedSovits;
-      } else {
-        logger.warn(`无法匹配SoVITS文件: ${selectionResult.sovits}，使用第一个可用文件`);
-        selectionResult.sovits = scannedFiles.sovits_files[0];
+      if (!matchedGpt) {
+        logger.warn(`无法匹配GPT文件: ${modelGroup.gpt}，使用第一个可用文件`);
+      }
+      if (!matchedSovits) {
+        logger.warn(`无法匹配SoVITS文件: ${modelGroup.sovits}，使用第一个可用文件`);
+      }
+      if (!matchedRefAudio) {
+        logger.warn(`无法匹配参考音频文件: ${refAudioPath}，使用第一个可用文件`);
       }
 
-      const matchedRefAudio = this.findBestMatchingPath(selectionResult.ref_audio, scannedFiles.ref_audio_files);
-      if (matchedRefAudio) {
-        if (matchedRefAudio !== selectionResult.ref_audio) {
-          logger.info(`参考音频路径匹配: "${selectionResult.ref_audio}" -> "${matchedRefAudio}"`);
-        }
-        selectionResult.ref_audio = matchedRefAudio;
-      } else {
-        logger.warn(`无法匹配参考音频文件: ${selectionResult.ref_audio}，使用第一个可用文件`);
-        selectionResult.ref_audio = scannedFiles.ref_audio_files[0];
-      }
-
-      logger.info(`[模型选择] ${character}: "${speech}" -> 情绪:${selectionResult.emotion}, 翻译:"${selectionResult.translated_text}"`);
+      logger.info(`[模型选择] ${character}: "${speech}" -> 情绪:${finalResult.emotion}, 翻译:"${finalResult.translated_text}"`);
       
-      return selectionResult;
+      return finalResult;
     } catch (error) {
       logger.error(`模型选择失败 [${config.model_type}] ${character}:`, error);
       
