@@ -143,6 +143,39 @@ export function initializeConfig(options: InitOptions): InitResult {
           return result;
         }
       }
+    } else {
+      // 如果没有指定模板，使用内置模板
+      const builtinTemplate = templateManager.getBuiltinTemplate();
+      if (builtinTemplate && (onlyVoice || (!onlyVoice && !onlyMcp))) {
+        const voiceConfigPath = path.join(workDir, 'voice.config.json');
+        if (!fs.existsSync(voiceConfigPath) || force) {
+          try {
+            fs.writeFileSync(voiceConfigPath, JSON.stringify(builtinTemplate, null, 2));
+            result.createdFiles.push(`语音配置文件: ${voiceConfigPath} (使用内置模板)`);
+          } catch (error) {
+            const errorMsg = `使用内置模板创建语音配置文件失败: ${error instanceof Error ? error.message : String(error)}`;
+            result.errors.push(errorMsg);
+            result.success = false;
+          }
+        } else {
+          result.skippedFiles.push(`语音配置文件: ${voiceConfigPath} (文件已存在)`);
+        }
+      }
+      
+      // 如果使用了内置模板，生成结果消息
+      if (result.createdFiles.length > 0 || result.skippedFiles.length > 0) {
+        if (result.success && result.errors.length === 0) {
+          result.message = `使用内置模板初始化配置文件完成`;
+        } else if (result.createdFiles.length > 0 && result.errors.length > 0) {
+          result.message = `使用内置模板部分初始化配置文件完成，但存在一些错误`;
+        } else if (result.errors.length > 0) {
+          result.message = `使用内置模板初始化配置文件失败`;
+          result.success = false;
+        } else {
+          result.message = `使用内置模板初始化配置文件完成，所有文件已存在`;
+        }
+        return result;
+      }
     }
 
     // 复制配置文件

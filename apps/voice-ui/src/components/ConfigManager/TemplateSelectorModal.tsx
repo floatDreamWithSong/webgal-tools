@@ -11,6 +11,12 @@ interface TemplateListItem {
   updatedAt: string
 }
 
+interface TemplateData {
+  templates: TemplateListItem[]
+  defaultTemplateId: string | null
+  hasBuiltinTemplate: boolean
+}
+
 interface TemplateSelectorModalProps {
   isOpen: boolean
   onClose: () => void
@@ -24,22 +30,30 @@ export function TemplateSelectorModal({
   onTemplateSelect,
   configType = 'voice' 
 }: TemplateSelectorModalProps) {
-  const [templates, setTemplates] = useState<TemplateListItem[]>([])
+  const [templateData, setTemplateData] = useState<TemplateData>({
+    templates: [],
+    defaultTemplateId: null,
+    hasBuiltinTemplate: false
+  })
   const [loading, setLoading] = useState(true)
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
+  const [setDefaultLoading, setSetDefaultLoading] = useState<string | null>(null)
 
   const loadTemplates = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/config/templates')
       if (response.ok) {
-        const data = await response.json()
+        const data: TemplateData = await response.json()
         // 根据配置类型过滤模板
-        const filteredTemplates = data.filter((template: TemplateListItem) => 
+        const filteredTemplates = data.templates.filter((template: TemplateListItem) => 
           template.type === configType || template.type === 'all'
         )
-        setTemplates(filteredTemplates)
+        setTemplateData({
+          ...data,
+          templates: filteredTemplates
+        })
       }
     } finally {
       setLoading(false)
@@ -49,6 +63,8 @@ export function TemplateSelectorModal({
   useEffect(() => {
     if (isOpen) {
       loadTemplates()
+      // 每次打开模态框时重置选择状态
+      setSelectedTemplateId(null)
     }
   }, [isOpen, loadTemplates])
 
@@ -64,14 +80,21 @@ export function TemplateSelectorModal({
   // 获取选中模板的名称
   const getSelectedTemplateName = () => {
     if (selectedTemplateId === null) {
-      return '默认模板'
+      return '内置模板'
     }
-    const template = templates.find(t => t.id === selectedTemplateId)
-    return template ? template.name : '默认模板'
+    const template = templateData.templates.find(t => t.id === selectedTemplateId)
+    return template ? template.name : '内置模板'
   }
 
   const handleDelete = async (templateId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    
+    // 检查是否为默认模板
+    if (templateData.defaultTemplateId === templateId) {
+      alert('默认模板不能删除，请先设置其他模板为默认模板')
+      return
+    }
+    
     if (!confirm('确定要删除这个模板吗？')) {
       return
     }
@@ -97,6 +120,34 @@ export function TemplateSelectorModal({
       alert('删除模板失败')
     } finally {
       setDeleteLoading(null)
+    }
+  }
+
+  const handleSetDefault = async (templateId: string | null, e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    setSetDefaultLoading(templateId || 'clear')
+    try {
+      const response = await fetch('/api/config/templates', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ templateId })
+      })
+
+      if (response.ok) {
+        // 重新加载模板列表以更新默认模板状态
+        await loadTemplates()
+      } else {
+        const error = await response.json()
+        alert(`设置默认模板失败: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('设置默认模板失败:', error)
+      alert('设置默认模板失败')
+    } finally {
+      setSetDefaultLoading(null)
     }
   }
 
@@ -137,24 +188,47 @@ export function TemplateSelectorModal({
             </div>
           ) : (
             <div className="space-y-2">
-              {/* 默认模板选项 */}
+              {/* 内置模板选项 */}
               <label className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                 <input
                   type="radio"
                   name="template"
-                  value="default"
+                  value="builtin"
                   checked={selectedTemplateId === null}
                   onChange={() => handleTemplateSelect(null)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                 />
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">默认模板</div>
-                  <div className="text-sm text-gray-500">使用系统默认配置</div>
+                  <div className="text-sm font-medium text-gray-900 flex items-center">
+                    内置模板
+                    {templateData.defaultTemplateId === null && (
+                      <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                        默认
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">使用系统内置的配置模板</div>
                 </div>
+                {templateData.defaultTemplateId !== null && (
+                  <button
+                    onClick={(e) => handleSetDefault(null, e)}
+                    disabled={setDefaultLoading === 'clear'}
+                    className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 p-1"
+                    title="设为默认模板"
+                  >
+                    {setDefaultLoading === 'clear' ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                )}
               </label>
 
               {/* 用户保存的模板 */}
-              {templates.map((template) => (
+              {templateData.templates.map((template) => (
                 <label key={template.id} className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                   <input
                     type="radio"
@@ -165,7 +239,14 @@ export function TemplateSelectorModal({
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">{template.name}</div>
+                    <div className="text-sm font-medium text-gray-900 flex items-center">
+                      {template.name}
+                      {templateData.defaultTemplateId === template.id && (
+                        <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                          默认
+                        </span>
+                      )}
+                    </div>
                     {template.description && (
                       <div className="text-sm text-gray-500">{template.description}</div>
                     )}
@@ -174,24 +255,46 @@ export function TemplateSelectorModal({
                       创建时间: {new Date(template.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => handleDelete(template.id, e)}
-                    disabled={deleteLoading === template.id}
-                    className="text-red-500 hover:text-red-700 disabled:text-gray-400 p-1"
-                    title="删除模板"
-                  >
-                    {deleteLoading === template.id ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                  <div className="flex space-x-1">
+                    {templateData.defaultTemplateId !== template.id && (
+                      <button
+                        onClick={(e) => handleSetDefault(template.id, e)}
+                        disabled={setDefaultLoading === template.id}
+                        className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 p-1"
+                        title="设为默认模板"
+                      >
+                        {setDefaultLoading === template.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
                     )}
-                  </button>
+                    <button
+                      onClick={(e) => handleDelete(template.id, e)}
+                      disabled={deleteLoading === template.id || templateData.defaultTemplateId === template.id}
+                      className={`p-1 ${
+                        templateData.defaultTemplateId === template.id
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-red-500 hover:text-red-700 disabled:text-gray-400'
+                      }`}
+                      title={templateData.defaultTemplateId === template.id ? '默认模板不能删除' : '删除模板'}
+                    >
+                      {deleteLoading === template.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </label>
               ))}
 
-              {templates.length === 0 && (
+              {templateData.templates.length === 0 && (
                 <div className="text-sm text-gray-500 py-8 text-center">
                   暂无保存的模板
                 </div>

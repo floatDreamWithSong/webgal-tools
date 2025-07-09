@@ -5,7 +5,7 @@ import { useState } from 'react'
 interface SaveTemplateModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (name: string, description: string, type: 'voice' | 'mcp' | 'all') => void
+  onSave: (name: string, description: string, type: 'voice' | 'mcp' | 'all', setAsDefault: boolean) => void
   loading?: boolean
   configType?: 'voice' | 'mcp' | 'all'
 }
@@ -20,6 +20,7 @@ export function SaveTemplateModal({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [type, setType] = useState<'voice' | 'mcp' | 'all'>(configType)
+  const [setAsDefault, setSetAsDefault] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,13 +32,14 @@ export function SaveTemplateModal({
     }
 
     setError('')
-    onSave(name.trim(), description.trim(), type)
+    onSave(name.trim(), description.trim(), type, setAsDefault)
   }
 
   const handleClose = () => {
     setName('')
     setDescription('')
     setType(configType)
+    setSetAsDefault(false)
     setError('')
     onClose()
   }
@@ -103,6 +105,20 @@ export function SaveTemplateModal({
               {/* <option value="mcp">MCP配置</option> */}
               {/* <option value="all">全部配置</option> */}
             </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="setAsDefault"
+              checked={setAsDefault}
+              onChange={(e) => setSetAsDefault(e.target.checked)}
+              disabled={loading}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:bg-gray-300"
+            />
+            <label htmlFor="setAsDefault" className="text-sm text-gray-700">
+              设置为默认模板
+            </label>
           </div>
 
           {error && (

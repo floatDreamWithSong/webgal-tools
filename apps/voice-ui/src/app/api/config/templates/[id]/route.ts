@@ -30,7 +30,16 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-          const success = templateManager.deleteTemplate(id)
+    // 检查是否为默认模板
+    const defaultTemplateId = templateManager.getDefaultTemplateId()
+    if (defaultTemplateId === id) {
+      return NextResponse.json(
+        { error: '默认模板不能删除，请先设置其他模板为默认模板' },
+        { status: 400 }
+      )
+    }
+    
+    const success = templateManager.deleteTemplate(id)
     if (!success) {
       return NextResponse.json(
         { error: '模板不存在' },

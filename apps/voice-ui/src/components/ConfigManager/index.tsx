@@ -138,7 +138,7 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
   }
 
   // 处理保存模板
-  const handleSaveTemplate = useCallback(async (name: string, description: string, type: 'voice' | 'mcp' | 'all') => {
+  const handleSaveTemplate = useCallback(async (name: string, description: string, type: 'voice' | 'mcp' | 'all', setAsDefault: boolean) => {
     setSaveTemplateLoading(true)
     try {
       const response = await fetch('/api/config/templates', {
@@ -150,7 +150,8 @@ export function ConfigManager({ workDir }: ConfigManagerProps) {
           name,
           description,
           type,
-          config
+          config,
+          setAsDefault
         })
       })
 

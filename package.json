@@ -1,6 +1,6 @@
 {
 	"name": "webgal-tools",
-	"version": "1.0.0-beta.3",
+	"version": "1.0.0-beta.4",
 	"description": "WebGAL 工具包",
 	"type": "module",
 	"private": false,

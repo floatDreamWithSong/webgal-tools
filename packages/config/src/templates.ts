@@ -1,8 +1,16 @@
 import ConfigStore from 'configstore';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigTemplate, TemplateListItem, SaveTemplateOptions, VoiceConfig } from './types.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const CONFIG_STORE_NAME = 'webgal-config-templates';
+
+// 获取内置模板路径
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const builtinTemplatePath = path.resolve(__dirname, '../example/voice.config.json');
 
 class TemplateManager {
   private store: ConfigStore;
@@ -98,6 +106,12 @@ class TemplateManager {
       return false;
     }
 
+    // 检查是否为默认模板
+    const defaultTemplateId = this.getDefaultTemplateId();
+    if (defaultTemplateId === id) {
+      throw new Error('默认模板不能删除，请先设置其他模板为默认模板');
+    }
+
     delete templates[id];
     this.store.set('templates', templates);
     return true;
@@ -111,6 +125,55 @@ class TemplateManager {
     return Object.values(templates).some(template => 
       template.name === name && template.id !== excludeId
     );
+  }
+
+  /**
+   * 设置默认模板
+   */
+  setDefaultTemplate(templateId: string | null): boolean {
+    try {
+      this.store.set('defaultTemplateId', templateId);
+      return true;
+    } catch (error) {
+      console.error('设置默认模板失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 获取默认模板ID
+   */
+  getDefaultTemplateId(): string | null {
+    return this.store.get('defaultTemplateId') || null;
+  }
+
+  /**
+   * 获取默认模板
+   */
+  getDefaultTemplate(): ConfigTemplate | null {
+    const defaultId = this.getDefaultTemplateId();
+    if (!defaultId) {
+      return null;
+    }
+    return this.getTemplate(defaultId);
+  }
+
+  /**
+   * 获取内置模板配置
+   */
+  getBuiltinTemplate(): VoiceConfig | null {
+    try {
+      if (!fs.existsSync(builtinTemplatePath)) {
+        console.error('内置模板文件不存在:', builtinTemplatePath);
+        return null;
+      }
+      
+      const content = fs.readFileSync(builtinTemplatePath, 'utf-8');
+      return JSON.parse(content) as VoiceConfig;
+    } catch (error) {
+      console.error('读取内置模板失败:', error);
+      return null;
+    }
   }
 
   /**
@@ -140,6 +203,7 @@ class TemplateManager {
    */
   clearAllTemplates(): void {
     this.store.delete('templates');
+    this.store.delete('defaultTemplateId');
   }
 }
 
