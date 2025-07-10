@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { TranslateConfig } from './types'
+import { TranslateConfig } from '@webgal-tools/config'
 
 interface TranslateSettingsProps {
   translate: TranslateConfig

@@ -25,8 +25,6 @@ export interface TranslateConfig {
   additional_prompt?: string;  // 用户自定义的额外提示词信息
   temperature?: number; // 模型温度参数，控制输出的随机性，范围0-2，默认0.3
   max_tokens?: number; // 最大输出token数，默认512
-  // 兼容旧配置
-  ollama_endpoint?: string;
 }
 
 export interface VoiceConfig {
@@ -228,13 +226,6 @@ export class VoiceConfigManager {
     // 如果禁用翻译，跳过其他验证
     if (!config.check) {
       return;
-    }
-
-    // 处理向后兼容性
-    if (config.ollama_endpoint && !config.base_url) {
-      config.base_url = config.ollama_endpoint;
-      config.model_type = 'ollama';
-      console.warn('⚠️ 检测到旧版配置格式，已自动转换为新格式。建议更新配置文件。');
     }
 
     if (!config.model_type) {

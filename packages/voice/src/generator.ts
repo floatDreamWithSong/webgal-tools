@@ -4,7 +4,6 @@ import { createHash } from 'crypto';
 import { DialogueChunk, WebGALScriptCompiler } from './compiler.js';
 import { checkTranslatorService, setCharacterStyle, translateService } from './translate/index.js';
 import { GPTSoVITSAPI } from './request.js';
-// 移除getEnvConfig依赖，使用当前工作目录
 import { VoiceConfigManager, CharacterVoiceConfig, TranslateConfig } from './config.js';
 import { BackupManager } from './backup.js';
 import { ContextExtractor } from './context.js';
@@ -297,7 +296,7 @@ export class VoiceGenerator {
     // 获取配置的角色列表
     const configuredCharacters = this.configManager.getAllCharacterNames();
 
-    // 解析所有对话
+    // 使用 parser 包解析所有对话
     const allDialogues = WebGALScriptCompiler.parseScript(filePath, configuredCharacters);
     logger.info(`📖 解析到 ${allDialogues.length} 条对话`);
 
@@ -411,7 +410,7 @@ export class VoiceGenerator {
       updatedDialogues.push(updatedDialogue);
     }
 
-    // 使用新的重构方法生成脚本内容
+    // 使用 parser 包重建脚本内容
     const newContent = WebGALScriptCompiler.rebuildScript(filePath, updatedDialogues);
 
     // 创建备份

@@ -1,3 +1,5 @@
+import { TranslateConfig } from '@webgal-tools/config'
+
 export interface VoiceConfig {
   volume: number
   gpt_sovits_url: string
@@ -8,17 +10,6 @@ export interface VoiceConfig {
   characters: CharacterConfig[]
 }
 
-export interface TranslateConfig {
-  model_type: 'ollama' | 'openai' | 'anthropic' | 'google' | 'mistral' | 'cohere' | 'custom'
-  base_url: string
-  api_key?: string
-  model_name: string
-  check: boolean
-  context_size: number
-  additional_prompt?: string
-  temperature?: number
-  max_tokens?: number
-}
 
 export interface CharacterConfig {
   character_name: string
