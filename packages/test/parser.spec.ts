@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { parseSceneScript, applySceneScript } from '@webgal-tools/parser/src/parser';
 
-const testScript = `A: 你好 -audio1.wav -volume=80;
+const testScript = `A:你好 -audio1.wav -volume=80;
 B: 世界 -audio2.wav;
 ; 这是注释
 C: 测试 -flag;

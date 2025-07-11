@@ -5,9 +5,6 @@ import { VoiceConfig } from './types.js';
 let voiceConfig: VoiceConfig | null = null;
 
 export function loadVoiceConfig(workDir: string): VoiceConfig | null {
-  if (voiceConfig) {
-    return voiceConfig;
-  }
 
   const configPath = path.join(workDir, 'voice.config.json');
   
@@ -37,14 +34,6 @@ export function getVoiceConfig(): VoiceConfig | null {
   return voiceConfig;
 }
 
-export function resetVoiceConfig(): void {
-  voiceConfig = null;
-}
-
-export function hasVoiceConfig(): boolean {
-  return voiceConfig !== null;
-}
-
 /**
  * 获取最大翻译器并发数
  * 从voice.config.json的max_translator字段读取，默认值为3
@@ -55,5 +44,5 @@ export function getMaxTranslator(): number {
   }
   
   // 如果配置未加载或未设置，返回默认值
-  return 3;
+  return 1;
 } 

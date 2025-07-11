@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { CharacterConfig } from './types'
-import { FileUpload } from './FileUpload'
 import { ModelScanner } from './ModelScanner'
 import { InferenceSettings } from './InferenceSettings'
 
@@ -37,7 +36,6 @@ export function CharacterCard({
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [showGptScanner, setShowGptScanner] = useState(false)
   const [showSovitsScanner, setShowSovitsScanner] = useState(false)
-  const [showFileUpload, setShowFileUpload] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   // 校验函数
@@ -135,13 +133,6 @@ export function CharacterCard({
       return `${baseClass} border-red-500 focus:ring-red-500`
     }
     return `${baseClass} border-gray-300 focus:ring-blue-500`
-  }
-
-  // 处理文件上传
-  const handleFileUpload = (filePath: string, fileName: string) => {
-    onUpdate(index, 'ref_audio', filePath)
-    onUpdate(index, 'ref_text', fileName)
-    setShowFileUpload(false)
   }
 
   // 处理模型选择
@@ -299,24 +290,14 @@ export function CharacterCard({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 参考音频{character.auto ? '文件夹' : '文件'}路径 <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={character.ref_audio}
-                  onChange={(e) => handleFieldChange('ref_audio', e.target.value)}
-                  onBlur={() => handleFieldBlur('ref_audio')}
-                  className={getFieldClassName('ref_audio')}
-                  placeholder={character.auto ? "D:/AIVoice/ref_audio/character_folder" : "D:/AIVoice/ref_audio/character.wav"}
-                />
-                {!character.auto && !character.ref_audio && (
-                  <button
-                    onClick={() => setShowFileUpload(true)}
-                    className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-                  >
-                    上传
-                  </button>
-                )}
-              </div>
+              <input
+                type="text"
+                value={character.ref_audio}
+                onChange={(e) => handleFieldChange('ref_audio', e.target.value)}
+                onBlur={() => handleFieldBlur('ref_audio')}
+                className={getFieldClassName('ref_audio')}
+                placeholder={character.auto ? "D:/AIVoice/ref_audio/character_folder" : "D:/AIVoice/ref_audio/character.wav"}
+              />
               {touched.ref_audio && errors.ref_audio && (
                 <p className="mt-1 text-sm text-red-600">{errors.ref_audio}</p>
               )}
@@ -380,34 +361,6 @@ export function CharacterCard({
         modelVersion={modelVersion}
         gptSovitsPath={gptSovitsPath}
       />
-
-      {/* 文件上传弹窗 */}
-      {showFileUpload && (
-        <div className="fixed inset-0 bg-black/50  flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">上传参考音频</h3>
-              <button
-                onClick={() => setShowFileUpload(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <FileUpload onFileSelect={handleFileUpload} />
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => setShowFileUpload(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 } 

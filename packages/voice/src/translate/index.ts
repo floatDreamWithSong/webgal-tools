@@ -109,6 +109,7 @@ export class TranslateService {
         // 对于自定义供应商，尝试使用通用的OpenAI兼容格式
         logger.info(`🔍 使用自定义模型: ${config.model_name}`);
         logger.info(`🔍 使用自定义模型: ${config.base_url}`);
+        logger.debug(`🔍 使用自定义模型: ${config.api_key}`);
         const customProvider = createOpenAI({
           baseURL: config.base_url,
           apiKey: config.api_key || 'dummy-key',

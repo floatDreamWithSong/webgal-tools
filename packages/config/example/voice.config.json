@@ -21,7 +21,7 @@
       "gpt": "GPT_weights_v2ProPlus/mygo-mujica/祐天寺若麦（喵梦）（Nyamu）",
       "sovits": "SoVITS_weights_v2ProPlus/mygo-mujica/祐天寺若麦（喵梦）（Nyamu）",
       "ref_audio": "D:/AIVoice/W_A/祐天寺若麦（喵梦）（Nyamu）",
-      "prompt": "【口吻】轻浮活泼的网络主播腔，句尾音调快活。自称'にゃむ'，称呼他人用'〜ち'（例：むつち）。代表句式：'超ヤバいにゃ！'、'ファンサービスしよっか〜'",
+      "prompt": "【口吻】轻浮活泼的网络主播腔，句尾音调快活。",
       "translate_to": "日文",
       "inferrence_config": {
         "prompt_language": "日文",

@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
 
     // 构建扫描路径 - 查找以特定前缀开头的文件夹
     const prefix = modelType === 'gpt' 
-      ? `GPT_weights_${modelVersion}` 
-      : `SoVITS_weights_${modelVersion}`
+      ? `GPT_weights${modelVersion === 'v1' ? '' : `_${modelVersion}`}` 
+      : `SoVITS_weights${modelVersion === 'v1' ? '' : `_${modelVersion}`}`
     
     const baseDir = gptSovitsPath
     const targetFolders: string[] = []
