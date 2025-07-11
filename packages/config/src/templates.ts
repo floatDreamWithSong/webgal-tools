@@ -1,16 +1,9 @@
 import ConfigStore from 'configstore';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigTemplate, TemplateListItem, SaveTemplateOptions, VoiceConfig } from './types.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { BUILTIN_VOICE_CONFIG } from './global.js';
 
 const CONFIG_STORE_NAME = 'webgal-config-templates';
-
-// 获取内置模板路径
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const builtinTemplatePath = path.resolve(__dirname, '../example/voice.config.json');
 
 class TemplateManager {
   private store: ConfigStore;
@@ -162,40 +155,15 @@ class TemplateManager {
    * 获取内置模板配置
    */
   getBuiltinTemplate(): VoiceConfig | null {
-    try {
-      if (!fs.existsSync(builtinTemplatePath)) {
-        console.error('内置模板文件不存在:', builtinTemplatePath);
-        return null;
-      }
-      
-      const content = fs.readFileSync(builtinTemplatePath, 'utf-8');
-      return JSON.parse(content) as VoiceConfig;
-    } catch (error) {
-      console.error('读取内置模板失败:', error);
-      return null;
-    }
+    // 直接使用全局变量中定义的内置模板
+    return BUILTIN_VOICE_CONFIG;
   }
 
   /**
    * 获取默认语音配置模板
    */
   getDefaultVoiceConfig(): VoiceConfig {
-    return {
-      volume: 30,
-      gpt_sovits_url: 'http://localhost:9872',
-      gpt_sovits_path: '',
-      model_version: 'v2',
-      max_translator: 1,
-      translate: {
-        model_type: 'ollama',
-        base_url: 'http://localhost:11434/api',
-        model_name: 'glm4:9b',
-        check: true,
-        context_size: 2,
-        additional_prompt: ''
-      },
-      characters: []
-    };
+    return BUILTIN_VOICE_CONFIG;
   }
 
   /**

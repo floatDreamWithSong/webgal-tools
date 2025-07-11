@@ -39,12 +39,12 @@ export function checkAndReportConfigStatus(workDir: string): boolean {
   
   if (status.allExists) {
     console.error('✅ 所有配置文件已存在：');
-    console.error(`   - 环境变量配置: ${workDir}/.env`);
+    console.error(`   - MCP配置: ${workDir}/mcp.config.json`);
     console.error(`   - 语音配置: ${workDir}/voice.config.json`);
     return true;
   } else {
     console.error('⚠️  配置文件状态：');
-    console.error(`   - 环境变量配置: ${status.envExists ? '✅ 存在' : '❌ 缺失'}`);
+    console.error(`   - MCP配置: ${status.mcpConfigExists ? '✅ 存在' : '❌ 缺失'}`);
     console.error(`   - 语音配置: ${status.voiceConfigExists ? '✅ 存在' : '❌ 缺失'}`);
     return false;
   }

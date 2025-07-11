@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { loadVoiceConfig, getVoiceConfig } from "@webgal-tools/config";
+import { reloadVoiceConfig, getVoiceConfig } from "@webgal-tools/config";
 import { logger } from "@webgal-tools/logger";
 import { VoiceGenerator } from "./generator.js";
+import { translateService } from "./translate/index.js";
 
 export interface VoiceOptions {
   workDir: string;
@@ -21,8 +22,12 @@ export interface VoiceResult {
  */
 export async function startVoiceService(options: VoiceOptions): Promise<VoiceResult> {
   try {
-    // 加载配置
-    loadVoiceConfig(options.workDir);
+    // 强制重新加载配置，清除缓存
+    reloadVoiceConfig(options.workDir);
+    
+    // 清除翻译服务的模型缓存，确保新配置生效
+    translateService.clearCache();
+    
     logger.info(`语音合成工作目录: ${options.workDir}`);
     
     const voiceConfig = getVoiceConfig();

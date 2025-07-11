@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { getVoiceConfig } from '@webgal-tools/config';
 import { VoiceGenerationConfig, LANGUAGE_OPTIONS } from './request.js';
+import { logger } from '@webgal-tools/logger';
 
 export interface CharacterVoiceConfig {
   character_name: string;
@@ -49,9 +50,10 @@ export class VoiceConfigManager {
    * 加载语音配置文件
    */
   loadConfig(): VoiceConfig {
-    if (this.config) {
-      return this.config;
-    }
+    // 清除实例缓存，强制重新加载
+    const timestamp = new Date().toISOString();
+    logger.info(`[${timestamp}] VoiceConfigManager: 清除实例缓存，从全局配置系统重新加载`);
+    this.config = null;
 
     // 尝试从新的配置系统加载
     const voiceConfig = getVoiceConfig();
@@ -66,8 +68,10 @@ export class VoiceConfigManager {
         characters: voiceConfig.characters as CharacterVoiceConfig[]
       };
       this.config = convertedConfig;
-      console.error(`✅ 从配置系统加载语音配置`);
-      console.error(`配置了 ${voiceConfig.characters.length} 个角色`);
+      const configHash = JSON.stringify(voiceConfig).slice(0, 50) + '...';
+      logger.info(`[${timestamp}] ✅ 从配置系统加载语音配置`);
+      logger.info(`[${timestamp}] 配置了 ${voiceConfig.characters.length} 个角色`);
+      logger.info(`[${timestamp}] 配置摘要: ${configHash}`);
       return convertedConfig;
     }
 

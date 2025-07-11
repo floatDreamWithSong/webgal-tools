@@ -23,11 +23,33 @@ export function loadVoiceConfig(workDir: string): VoiceConfig | null {
     }
 
     voiceConfig = rawConfig as VoiceConfig;
-    console.error(`已加载语音配置文件: voice.config.json`);
+    const timestamp = new Date().toISOString();
+    console.error(`[${timestamp}] 已加载语音配置文件: voice.config.json (工作目录: ${workDir})`);
+    console.error(`[${timestamp}] 配置角色数: ${rawConfig.characters?.length || 0}`);
     return voiceConfig;
   } catch (error) {
     throw new Error(`加载语音配置失败: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+/**
+ * 强制重新加载语音配置
+ * @param workDir 工作目录
+ * @returns 配置对象或null
+ */
+export function reloadVoiceConfig(workDir: string): VoiceConfig | null {
+  // 清除缓存，强制重新读取
+  const timestamp = new Date().toISOString();
+  console.error(`[${timestamp}] 🔄 强制重新加载配置，清除缓存 (工作目录: ${workDir})`);
+  voiceConfig = null;
+  return loadVoiceConfig(workDir);
+}
+
+/**
+ * 清除语音配置缓存
+ */
+export function clearVoiceConfigCache(): void {
+  voiceConfig = null;
 }
 
 export function getVoiceConfig(): VoiceConfig | null {

@@ -1,13 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import templateManager from './templates.js';
-
-// 获取当前文件的目录
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// 修改路径解析，确保在编译后能正确找到example目录
-const exampleDir = path.resolve(__dirname, '../example');
+import { loadVoiceConfig } from './voice.js';
 
 export interface InitOptions {
   workDir: string;
@@ -56,31 +50,6 @@ export function initializeConfig(options: InitOptions): InitResult {
     if (!fs.existsSync(workDir)) {
       fs.mkdirSync(workDir, { recursive: true });
     }
-
-    // 定义要复制的配置文件（只支持JSON格式）
-    const allConfigFiles = [
-      {
-        source: path.join(exampleDir, 'mcp.config.json'),
-        target: path.join(workDir, 'mcp.config.json'),
-        description: 'MCP配置文件',
-        type: 'mcp'
-      },
-      {
-        source: path.join(exampleDir, 'voice.config.json'),
-        target: path.join(workDir, 'voice.config.json'),
-        description: '语音配置文件',
-        type: 'voice'
-      }
-    ];
-
-    // 根据选项过滤配置文件
-    let configFiles = allConfigFiles;
-    if (onlyVoice) {
-      configFiles = allConfigFiles.filter(f => f.type === 'voice');
-    } else if (onlyMcp) {
-      configFiles = allConfigFiles.filter(f => f.type === 'mcp');
-    }
-    // 默认初始化所有JSON配置文件
 
     // 如果指定了模板，先处理模板
     if (templateId) {
@@ -178,27 +147,26 @@ export function initializeConfig(options: InitOptions): InitResult {
       }
     }
 
-    // 复制配置文件
-    for (const configFile of configFiles) {
+    // 如果没有使用模板，则创建默认的MCP配置
+    if ((!onlyVoice || onlyMcp) && (!fs.existsSync(path.join(workDir, 'mcp.config.json')) || force)) {
       try {
-        if (fs.existsSync(configFile.target) && !force) {
-          result.skippedFiles.push(`${configFile.description}: ${configFile.target} (文件已存在)`);
-          continue;
-        }
-
-        if (!fs.existsSync(configFile.source)) {
-          result.errors.push(`源文件不存在: ${configFile.source}`);
-          result.success = false;
-          continue;
-        }
-
-        fs.copyFileSync(configFile.source, configFile.target);
-        result.createdFiles.push(`${configFile.description}: ${configFile.target}`);
+        // 创建一个简单的默认MCP配置
+        const defaultMcpConfig = {
+          port: 3000,
+          debug: false
+        };
+        fs.writeFileSync(
+          path.join(workDir, 'mcp.config.json'), 
+          JSON.stringify(defaultMcpConfig, null, 2)
+        );
+        result.createdFiles.push(`MCP配置文件: ${path.join(workDir, 'mcp.config.json')}`);
       } catch (error) {
-        const errorMsg = `复制 ${configFile.description} 失败: ${error instanceof Error ? error.message : String(error)}`;
+        const errorMsg = `创建默认MCP配置文件失败: ${error instanceof Error ? error.message : String(error)}`;
         result.errors.push(errorMsg);
         result.success = false;
       }
+    } else if ((!onlyVoice || onlyMcp) && fs.existsSync(path.join(workDir, 'mcp.config.json'))) {
+      result.skippedFiles.push(`MCP配置文件: ${path.join(workDir, 'mcp.config.json')} (文件已存在)`);
     }
 
     // 生成结果消息
@@ -212,7 +180,7 @@ export function initializeConfig(options: InitOptions): InitResult {
     } else {
       result.message = '所有配置文件已存在，无需初始化';
     }
-
+    loadVoiceConfig(workDir)
   } catch (error) {
     result.success = false;
     result.message = `初始化过程发生错误: ${error instanceof Error ? error.message : String(error)}`;
@@ -226,32 +194,19 @@ export function initializeConfig(options: InitOptions): InitResult {
  * 检查配置文件是否存在
  */
 export function checkConfigFiles(workDir: string): {
-  envExists: boolean;
   voiceConfigExists: boolean;
+  mcpConfigExists: boolean;
   allExists: boolean;
 } {
-  const envPath = path.join(workDir, '.env');
   const voiceConfigPath = path.join(workDir, 'voice.config.json');
+  const mcpConfigPath = path.join(workDir, 'mcp.config.json');
   
-  const envExists = fs.existsSync(envPath);
   const voiceConfigExists = fs.existsSync(voiceConfigPath);
+  const mcpConfigExists = fs.existsSync(mcpConfigPath);
   
   return {
-    envExists,
     voiceConfigExists,
-    allExists: envExists && voiceConfigExists
+    mcpConfigExists,
+    allExists: voiceConfigExists && mcpConfigExists
   };
 }
-
-/**
- * 获取示例配置文件的路径
- */
-export function getExampleConfigPaths(): {
-  envExample: string;
-  voiceConfigExample: string;
-} {
-  return {
-    envExample: path.join(exampleDir, '.env.example'),
-    voiceConfigExample: path.join(exampleDir, 'voice.config.json')
-  };
-} 

@@ -1,5 +1,8 @@
-{
-  "volume": 30,
+import { VoiceConfig } from "./types";
+
+// 内置语音配置模板（硬编码）
+export const BUILTIN_VOICE_CONFIG: VoiceConfig = {
+  "volume": 31,
   "gpt_sovits_url": "http://localhost:9872",
   "gpt_sovits_path": "D:/AIVoice/GPT-SoVITS-v2pro-20250604",
   "model_version": "v2",
@@ -21,6 +24,7 @@
       "gpt": "GPT_weights_v2ProPlus/mygo-mujica/祐天寺若麦（喵梦）（Nyamu）",
       "sovits": "SoVITS_weights_v2ProPlus/mygo-mujica/祐天寺若麦（喵梦）（Nyamu）",
       "ref_audio": "D:/AIVoice/W_A/祐天寺若麦（喵梦）（Nyamu）",
+      "ref_text": "",
       "prompt": "【口吻】轻浮活泼的网络主播腔，句尾音调快活。",
       "translate_to": "日文",
       "inferrence_config": {
@@ -103,4 +107,4 @@
       }
     }
   ]
-}
+};

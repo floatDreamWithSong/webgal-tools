@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/parser",
-  "version": "1.7.13",
+  "version": "1.7.17",
   "description": "WebGAL scene script parser module",
   "type": "module",
   "main": "dist/index.js",

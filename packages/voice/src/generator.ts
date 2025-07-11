@@ -31,6 +31,12 @@ export class VoiceGenerator {
     this.workDir = workDir; // 使用传入的工作目录，如果没有则使用当前工作目录
     this.configManager = new VoiceConfigManager(this.workDir);
     this.backupManager = new BackupManager(this.workDir);
+    
+    // 强制加载最新配置，确保VoiceGenerator使用最新的配置
+    this.configManager.loadConfig();
+    
+    // 清除翻译服务缓存，确保使用最新的翻译配置
+    translateService.clearCache();
     this.api = new GPTSoVITSAPI(
       this.configManager.getGptSovitsUrl(),
       this.configManager.getModelVersion()

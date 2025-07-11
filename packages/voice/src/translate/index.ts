@@ -34,9 +34,12 @@ export class TranslateService {
    * 获取或创建AI模型实例
    */
   private getModel(config: TranslateConfig): LanguageModel {
-    const cacheKey = `${config.model_type}:${config.base_url}:${config.model_name}`;
+    // 包含api_key在缓存键中，确保api_key变更时会创建新的模型实例
+    const cacheKey = `${config.model_type}:${config.base_url}:${config.model_name}:${config.api_key || 'no-key'}`;
     
     if (this.modelCache.has(cacheKey)) {
+      const timestamp = new Date().toISOString();
+      logger.info(`[${timestamp}] 🔄 使用缓存的翻译模型: ${config.model_type}`);
       return this.modelCache.get(cacheKey)!;
     }
 
@@ -121,6 +124,8 @@ export class TranslateService {
         throw new Error(`不支持的模型类型: ${config.model_type}`);
     }
 
+    const timestamp = new Date().toISOString();
+    logger.info(`[${timestamp}] ✅ 创建新的翻译模型: ${config.model_type} (API Key: ${config.api_key ? '已设置' : '未设置'})`);
     this.modelCache.set(cacheKey, model);
     return model;
   }
@@ -661,6 +666,9 @@ ${this.getCommonTranslationRules(targetLanguage)}
    * 清理模型缓存
    */
   clearCache(): void {
+    const cacheSize = this.modelCache.size;
+    const timestamp = new Date().toISOString();
+    logger.info(`[${timestamp}] 🧹 清理翻译模型缓存，共清理 ${cacheSize} 个缓存模型`);
     this.modelCache.clear();
   }
 
