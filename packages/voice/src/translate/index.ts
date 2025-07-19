@@ -655,7 +655,7 @@ ${this.getCommonTranslationRules(targetLanguage)}
       });
       
       logger.info(`${config.model_type} 测试消息: ${result.text.trim()}`);
-      return result.text.length > 2;
+      return result.text.length > 0;
     } catch (error) {
       logger.error(`服务可用性检查失败 [${config.model_type}]:`, error);
       return false;

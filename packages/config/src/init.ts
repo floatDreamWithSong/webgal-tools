@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import templateManager from './templates.js';
 import { loadVoiceConfig } from './voice.js';
+import { BUILTIN_MCP_CONFIG } from './global.js';
 
 export interface InitOptions {
   workDir: string;
@@ -150,14 +151,10 @@ export function initializeConfig(options: InitOptions): InitResult {
     // 如果没有使用模板，则创建默认的MCP配置
     if ((!onlyVoice || onlyMcp) && (!fs.existsSync(path.join(workDir, 'mcp.config.json')) || force)) {
       try {
-        // 创建一个简单的默认MCP配置
-        const defaultMcpConfig = {
-          port: 3000,
-          debug: false
-        };
+        // 使用全局变量中定义的内置MCP配置
         fs.writeFileSync(
           path.join(workDir, 'mcp.config.json'), 
-          JSON.stringify(defaultMcpConfig, null, 2)
+          JSON.stringify(BUILTIN_MCP_CONFIG, null, 2)
         );
         result.createdFiles.push(`MCP配置文件: ${path.join(workDir, 'mcp.config.json')}`);
       } catch (error) {

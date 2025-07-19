@@ -108,3 +108,12 @@ export const BUILTIN_VOICE_CONFIG: VoiceConfig = {
     }
   ]
 };
+
+// 内置MCP配置模板（硬编码）
+export const BUILTIN_MCP_CONFIG = {
+  "port": 3000,
+  "debug": false,
+  "enableAssetScanner": true,
+  "enableFigureScanner": true,
+  "enableSceneScanner": true
+};

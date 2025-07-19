@@ -58,13 +58,13 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      // 验证GPT-SoVITS路径是否存在（如果路径不为空）
-      if (config.gpt_sovits_path && config.gpt_sovits_path.trim() && !fs.existsSync(config.gpt_sovits_path)) {
-        return NextResponse.json({ 
-          valid: false, 
-          error: `GPT-SoVITS路径不存在: ${config.gpt_sovits_path}` 
-        })
-      }
+      // 注释掉路径存在性检查，只验证格式正确性
+      // if (config.gpt_sovits_path && config.gpt_sovits_path.trim() && !fs.existsSync(config.gpt_sovits_path)) {
+      //   return NextResponse.json({ 
+      //     valid: false, 
+      //     error: `GPT-SoVITS路径不存在: ${config.gpt_sovits_path}` 
+      //   })
+      // }
       
       return NextResponse.json({ 
         valid: true, 
