@@ -15,7 +15,7 @@ console.log('Starting WebGAL Voice UI...');
 
 // 直接启动生产服务器（.next 文件夹已包含在包中）
 const serverProcess = spawn('npx', [
-    'next',
+    'next@15.3.5',
     'start',
     '-p',
     port

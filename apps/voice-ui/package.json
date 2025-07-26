@@ -1,6 +1,6 @@
 {
   "name": "@webgal-tools/voice-ui",
-  "version": "1.7.18",
+  "version": "1.7.19",
   "description": "WebGAL 语音合成 Web UI",
   "type": "module",
   "main": "bin/cli.js",
@@ -28,7 +28,7 @@
     "@webgal-tools/config": "workspace:*",
     "@webgal-tools/voice": "workspace:*",
     "@webgal-tools/logger": "workspace:*",
-    "next": "^15.3.5",
+    "next": "15.3.5",
     "open": "^10.1.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
